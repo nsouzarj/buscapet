@@ -1,10 +1,11 @@
-# buscapet
+# BuscaPet
 
-A new Flutter project.
+Projeto em fluuter 
 
-## Getting Started
+## Objetivo
 
-This project is a starting point for a Flutter application.
+Este projeto tem como objetivo busca pets perdidos abandonados ou encontrados.
+Tem acesso a api para registrar aniamis e fotos 
 
 A few resources to get you started if this is your first Flutter project:
 
