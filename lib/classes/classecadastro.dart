@@ -17,13 +17,14 @@ class CadastroPet {
   String descricao;
   String situacao;
   String datadodesaparecimento;
+  String endereco;
   String bairro;
-  String cidadeEstado;
+  String cidade;
+  String estado;
   String nomeTutor;
   String email;
   String celular;
   List<ImagemPet> imagens;
-
 
   CadastroPet({
     required this.id,
@@ -37,8 +38,10 @@ class CadastroPet {
     required this.descricao,
     required this.situacao,
     required this.datadodesaparecimento,
+    required this.endereco,
     required this.bairro,
-    required this.cidadeEstado,
+    required this.cidade,
+    required this.estado,
     required this.nomeTutor,
     required this.email,
     required this.celular,
@@ -46,10 +49,9 @@ class CadastroPet {
   });
 
   // A factory constructor for creating a new Cadastro instance from a map.
-  factory CadastroPet.fromJson(Map<String, dynamic> json) => _$CadastroPetFromJson(json);
+  factory CadastroPet.fromJson(Map<String, dynamic> json) =>
+      _$CadastroPetFromJson(json);
 
   // A method for converting a Cadastro instance to a map.
   Map<String, dynamic> toJson() => _$CadastroPetToJson(this);
 }
-
-

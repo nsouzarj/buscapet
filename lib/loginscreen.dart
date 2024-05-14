@@ -1,7 +1,7 @@
 import 'package:buscapet/caduser.dart';
 import 'package:buscapet/classesutils/utilspet.dart';
 import 'package:buscapet/services/cadastroservice.dart';
-import 'package:buscapet/telabsuca.dart';
+import 'package:buscapet/menuprincipal.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

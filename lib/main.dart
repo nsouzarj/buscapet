@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:buscapet/listapets.dart';
 import 'package:buscapet/loginscreen.dart';
-import 'package:buscapet/telabsuca.dart';
+import 'package:buscapet/menuprincipal.dart';
 import 'package:flutter/material.dart';
 import 'fomulariocadastro.dart';
 import 'dart:ui';
@@ -19,8 +19,8 @@ void main() {
       '/splash': (context) => SplashScreen(),
       '/menu': (context) => MenuPrincipal(),
       '/login': (context) => LoginScreen(),
-      '/listaPets': (context) => TelaFiltroPet(),
-      '/cadastro': (context) =>  FormularioCadastroPet(),
+      '/listaPets': (context) =>  TelaFiltroPet(),
+      '/cadastro': (context) =>  CadastroPet(),
     },
   ));
 }

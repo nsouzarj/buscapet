@@ -49,7 +49,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                      builder: (context) => FormularioCadastroPet()),
+                      builder: (context) => CadastroPet()),
                 );
               },
             ),

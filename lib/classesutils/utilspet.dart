@@ -67,7 +67,7 @@ class MensagemCentralizada extends StatelessWidget {
 class Global {
   /// URL base utilizada pela aplicação.
   //String urlGeral='https://laauci-ip-170-238-131-228.tunnelmole.net';
-  String urlGeral = "https://znojnv-ip-170-238-131-228.tunnelmole.net";
+  String urlGeral = "http://192.168.18.4:8084";
 }
 
 /// Classe para validação de emails.
@@ -273,8 +273,44 @@ class ListaRacaCaes {
     'YORKSHIRE TERRIER'
   ];
 
-  List<String> ListaRaca(){
+  List<String> ListaRaca() {
     return _listaRacas;
   }
+}
 
+//Traz lista de estados
+class ListaEstados {
+ static const List<String> _listaEstados = [
+    'ACRE (AC)',
+    'ALAGOAS (AL)',
+    'AMAPÁ (AP)',
+    'AMAZONAS (AM)',
+    'BAHIA (BA)',
+    'CEARÁ (CE)',
+    'DISTRITO FEDERAL (DF)',
+    'ESPÍRITO SANTO (ES)',
+    'GOIÁS (GO)',
+    'MARANHÃO (MA)',
+    'MATO GROSSO (MT)',
+    'MATO GROSSO DO SUL (MS)',
+    'MINAS GERAIS (MG)',
+    'PARÁ (PA)',
+    'PARAÍBA (PB)',
+    'PARANÁ (PR)',
+    'PERNAMBUCO (PE)',
+    'PIAUÍ (PI)',
+    'RIO DE JANEIRO (RJ)',
+    'RIO GRANDE DO NORTE (RN)',
+    'RIO GRANDE DO SUL (RS)',
+    'RONDÔNIA (RO)',
+    'RORAIMA (RR)',
+    'SANTA CATARINA (SC)',
+    'SÃO PAULO (SP)',
+    'SERGIPE (SE)',
+    'TOCANTINS (TO)'
+  ];
+
+  List<String> listaEstados() {
+    return _listaEstados;
+  }
 }

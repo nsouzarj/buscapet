@@ -1,468 +1,957 @@
-import 'package:buscapet/classes/classecadastro.dart';
-import 'package:buscapet/classesutils/utilspet.dart';
-import 'package:buscapet/services/buscapetservice.dart';
+import 'dart:io';
+import 'package:buscapet/classes/imagempet.dart';
+import 'package:buscapet/services/cadastroservice.dart';
+import 'package:buscapet/services/fileservice.dart';
+import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/services.dart';
-import 'package:photo_view/photo_view.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'fotospets.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:multi_image_picker_plus/multi_image_picker_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:intl/intl.dart';
+import 'classes/classecadastro.dart';
+import 'classesutils/utilspet.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
-// Tela de filtro
-class TelaFiltroPet extends StatefulWidget {
-  @override
-  _TelaFiltroPetState createState() => _TelaFiltroPetState();
-}
-
-class _TelaFiltroPetState extends State<TelaFiltroPet> {
-  final _formKey = GlobalKey<FormState>();
-  final _nomeAnimalController = TextEditingController();
-  final _racaController = TextEditingController();
-  final _tipoController = TextEditingController();
-  final _situacaoController = TextEditingController();
-  final ListaRacaCaes _listaRaca = ListaRacaCaes();
-
-  // Variáveis para armazenar os valores selecionados nos filtros
-  String? _racaSelecionada;
-  String? _tipoSelecionado;
-  String? _situacaoSelecionada;
-
+class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // Lista de opções para os filtros
-    final List<String> _listaRacas =
-        _listaRaca.ListaRaca(); // Substitua pelas raças reais
-    final List<String> _listaTipos = ['CANINO', 'FELINO', 'OUTRO'];
-    final List<String> _listaSituacoes = [
-      'DESAPARECIDO',
-      'ABANDONADO',
-      'ADOCAO'
-    ];
+    return MaterialApp(
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: [
+        const Locale('pt', ''),
+        const Locale('pt', 'BR'), // Portuguese (Brazil)
+        // Add more locales as needed
+      ],
+      locale: const Locale('pt', 'BR'),
+      title: 'Cadastro de Pets',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: FormularioCadastroPet(),
+    );
+  }
+}
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Filtrar Pets',
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Colors.black,
-        iconTheme: IconThemeData(color: Colors.white),
-      ),
-      body: Form(
-        key: _formKey,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Campo de texto para o nome do animal
-              TextFormField(
-                controller: _nomeAnimalController,
-                inputFormatters: [UpperCaseTextFormatter()],
-                decoration: InputDecoration(
-                  labelText: 'Nome do Pet',
-                ),
+class FormularioCadastroPet extends StatefulWidget {
+  @override
+  _TelaDeCadastroState createState() => _TelaDeCadastroState();
+}
+
+class _TelaDeCadastroState extends State<FormularioCadastroPet> {
+  TextEditingController _controllerData = TextEditingController();
+  TextEditingController _controller = TextEditingController();
+  final ListaRacaCaes _listaRaca = ListaRacaCaes();
+  final ListaEstados _listaEstados = ListaEstados();
+  FocusNode _focusNodeData = FocusNode();
+  List<Asset> images = <Asset>[];
+  final _formKey = GlobalKey<FormBuilderState>();
+  ServicePet cadastroService = ServicePet();
+  final ImagePicker _picker = ImagePicker();
+  UtilsPet _utilsPet = UtilsPet();
+  ServiceImages _serviceImages = ServiceImages();
+  ValidaEmail _validarEmail = ValidaEmail();
+
+  // Campos para a classe Animal
+  String nomeAnimal = "";
+  String tipoAnimal = "";
+  String racaAnimal = "";
+  String idadeAnimal = "";
+  bool _chipado = false;
+  bool _vacinado = false;
+  bool _castrado = false;
+  String descricaoAnimal = "";
+  String dataDesaparecimento = "";
+  String enderecoPet = "";
+  String bairroPet = "";
+  String cidadeEstado = "";
+  String estadoPet = "";
+  String nomeTutor = "";
+  String emailTutor = "";
+  String celularTutor = "";
+  List<File> _imagens = [];
+  List<XFile> _imageFileList = [];
+  final ImagePicker imagePicker = ImagePicker();
+
+  // Variáveis para armazenar as seleções dos Dropdowns
+  String? _racaSelecionada;
+  String? _estadoSelecionado;
+
+  Future<void> _selecionarData(BuildContext context) async {
+    final DateTime? dataEscolhida = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (dataEscolhida != null && dataEscolhida != DateTime.now()) {
+      setState(() {
+        _controllerData.text = DateFormat('dd/MM/yyyy').format(dataEscolhida);
+      });
+    }
+  }
+
+  Future<void> _showMyDialog(
+      BuildContext context, CadastroPet meuCadastro) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        bool isLoading = false;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text(
+                'Aviso!',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18),
               ),
-              SizedBox(height: 20),
-              // Dropdown para selecionar o tipo
-              DropdownButtonFormField<String>(
-                value: _tipoSelecionado,
-                onChanged: (value) {
-                  setState(() {
-                    _tipoSelecionado = value;
-                  });
-                },
-                items: _listaTipos.map((tipo) {
-                  return DropdownMenuItem(
-                    value: tipo,
-                    child: Text(tipo),
-                  );
-                }).toList(),
-                decoration: InputDecoration(
-                  labelText: 'Tipo',
-                ),
-              ),
-              DropdownButtonFormField<String>(
-                value: _racaSelecionada,
-                onChanged: (value) {
-                  setState(() {
-                    _racaSelecionada = value;
-                  });
-                },
-                items: _listaRacas.map((raca) {
-                  return DropdownMenuItem(
-                    value: raca,
-                    child: Text(
-                      raca,
-                      style: TextStyle(fontSize: 13),
+              content: SingleChildScrollView(
+                child: ListBody(
+                  children: <Widget>[
+                    const Text(
+                      'Confirma o cadastro do pet?',
+                      style: TextStyle(fontSize: 14, color: Colors.blueAccent),
                     ),
-                  );
-                }).toList(),
-                decoration: InputDecoration(
-                  labelText: 'Raça',
+                    if (isLoading)
+                      const Center(child: CircularProgressIndicator()),
+                  ],
                 ),
               ),
-              // Dropdown para selecionar a raça
-              SizedBox(height: 20),
-              // Dropdown para selecionar a situação
-              DropdownButtonFormField<String>(
-                value: _situacaoSelecionada,
-                onChanged: (value) {
-                  setState(() {
-                    _situacaoSelecionada = value;
-                  });
-                },
-                items: _listaSituacoes.map((situacao) {
-                  return DropdownMenuItem(
-                    value: situacao,
-                    child: Text(situacao),
-                  );
-                }).toList(),
-                decoration: InputDecoration(
-                  labelText: 'Situação',
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Cancelar'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
                 ),
-              ),
-              SizedBox(height: 32),
-              // Botão para aplicar os filtros
-              ElevatedButton(
-                onPressed: () {
-                  // Obter os valores dos filtros
-                  String nomeAnimal = _nomeAnimalController.text;
-                  String? raca = _racaSelecionada;
-                  String? tipo = _tipoSelecionado;
-                  String? situacao = _situacaoSelecionada;
-                  // Passar os filtros para a tela da lista de pets
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ListaPetFiltrada(
-                        nomeAnimal: nomeAnimal,
-                        raca: raca,
-                        tipo: tipo,
-                        situacao: situacao,
-                      ),
-                    ),
-                  );
-                },
-                child: Text('Aplicar Filtros'),
-              ),
-              SizedBox(height: 16),
-              // Botão para limpar os filtros
-              ElevatedButton(
-                onPressed: () {
-                  _limparFiltros();
-                },
-                child: Text('Limpar Filtros'),
-              ),
-            ],
-          ),
-        ),
-      ),
+                TextButton(
+                  child: const Text('Confirmar'),
+                  onPressed: () async {
+                    print(meuCadastro.toJson());
+                    try {
+                      setState(() {
+                        isLoading = true;
+                      });
+                      await cadastroService.cadPetApi(meuCadastro);
+                      _serviceImages.uploadMultipleImages(_imagens);
+                      await showModalBottomSheet(
+                        context: context,
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(8)),
+                        ),
+                        builder: (BuildContext context) {
+                          return Container(
+                            height: 200,
+                            padding: EdgeInsets.all(20),
+                            child: Column(
+                              children: [
+                                Text(
+                                  "Aviso",
+                                  style: TextStyle(
+                                      fontSize: 19, fontWeight: FontWeight.bold),
+                                ),
+                                SizedBox(height: 10),
+                                Text(
+                                  "Cadastro realizado.",
+                                  style: TextStyle(color: Colors.blue),
+                                ),
+                                SizedBox(height: 20),
+                                ElevatedButton(
+                                  child: Text("Fechar"),
+                                  onPressed: () => Navigator.of(context).pop(),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    } catch (e) {
+                      await showModalBottomSheet(
+                        context: context,
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(8)),
+                        ),
+                        builder: (BuildContext context) {
+                          return Container(
+                            height: 200,
+                            padding: EdgeInsets.all(20),
+                            child: Column(
+                              children: [
+                                Text(
+                                  "Aviso",
+                                  style: TextStyle(
+                                      fontSize: 18, fontWeight: FontWeight.bold),
+                                ),
+                                SizedBox(height: 10),
+                                Text(
+                                  "Erro ao cadastrar.",
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                                SizedBox(height: 20),
+                                ElevatedButton(
+                                  child: Text("Fechar"),
+                                  onPressed: () => Navigator.of(context).pop(),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    } finally {
+                      setState(() {
+                        isLoading = false;
+                      });
+                    }
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
-  // Método para limpar os filtros
-  void _limparFiltros() {
+  Future<void> _selecionarImagensDaGaleria() async {
+    List<File> arquivosImagens = [];
+    var status = await Permission.storage.status;
+    if (!status.isGranted) {
+      await Permission.storage.request();
+    }
+    List<Asset> imagensSelecionadas = [];
+    try {
+      imagensSelecionadas = await MultiImagePicker.pickImages(
+        androidOptions: AndroidOptions(
+            maxImages: 4,
+            hasCameraInPickerPage: true,
+            useDetailsView: true,
+            lightStatusBar: true,
+            actionBarColor: Colors.black,
+            actionBarTitle: "Fotos da Galeria",
+            statusBarColor: Colors.white,
+            actionBarTitleColor: Colors.white,
+            autoCloseOnSelectionLimit: false,
+            selectCircleStrokeColor: Colors.red,
+            textOnNothingSelected: "Ok",
+            selectionLimitReachedText: "Maximo de fotos 4."),
+        iosOptions: IOSOptions(
+          doneButton: UIBarButtonItem(title: 'Confirm', tintColor: Colors.cyan),
+          cancelButton:
+              UIBarButtonItem(title: 'Cancel', tintColor: Colors.orange),
+          albumButtonColor: Colors.cyan,
+        ),
+      );
+    } on Exception catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao selecionar imagens: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+
+    for (var asset in imagensSelecionadas) {
+      ByteData byteData = await asset.getByteData();
+      List<int> imageData = byteData.buffer.asUint8List();
+      File arquivo =
+          await File('${(await getTemporaryDirectory()).path}/${asset.name}')
+              .writeAsBytes(imageData);
+      arquivosImagens.add(arquivo);
+    }
+
     setState(() {
-      _nomeAnimalController.clear();
-      _racaSelecionada = null;
-      _tipoSelecionado = null;
-      _situacaoSelecionada = null;
+      for (File foto in arquivosImagens) {
+        if (_imagens.length <= 3) {
+          _imagens.add(foto);
+        } else {
+          final BuildContext contextoTela = context;
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              Future.delayed(Duration(seconds: 3), () {
+                Navigator.of(contextoTela).pop();
+              });
+              return MensagemCentralizada(mensagem: 'Limite máximo de 4 fotos!');
+            },
+          );
+        }
+      }
     });
   }
-}
 
-// Tela da lista de pets filtrada
-class ListaPetFiltrada extends StatefulWidget {
-  final String nomeAnimal;
-  final String? raca;
-  final String? tipo;
-  final String? situacao;
+  Future<void> _capturarImagemDaCamera() async {
+    final ImagePicker _picker = ImagePicker();
+    final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+    if (image != null) {
+      File arquivoImagem = File(image.path);
+      setState(() {
+        if (_imagens.length <= 3) {
+          _imagens.add(arquivoImagem);
+        } else {
+          final BuildContext contextoTela = context;
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              Future.delayed(Duration(seconds: 3), () {
+                Navigator.of(contextoTela).pop();
+              });
+              return MensagemCentralizada(
+                  mensagem: 'Limíte de 4 fotos atingido!');
+            },
+          );
+        }
+      });
+    }
+  }
 
-  ListaPetFiltrada({
-    required this.nomeAnimal,
-    required this.raca,
-    required this.tipo,
-    required this.situacao,
-  });
+  Future<void> _adicionarFoto(BuildContext context) async {
+    var status = await Permission.photos.status;
+    if (!status.isGranted) {
+      await Permission.photos.request();
+    }
+
+    showModalBottomSheet(
+        context: context,
+        builder: (BuildContext bc) {
+          return SafeArea(
+            child: Wrap(
+              children: <Widget>[
+                ListTile(
+                    leading: Icon(Icons.photo_library),
+                    title: Text('Galeria', style: TextStyle(color: Colors.black)),
+                    onTap: () async {
+                      _selecionarImagensDaGaleria();
+                    }),
+                ListTile(
+                  leading: Icon(Icons.photo_camera),
+                  title: Text('Câmera', style: TextStyle(color: Colors.black)),
+                  onTap: () async {
+                    _capturarImagemDaCamera();
+                  },
+                ),
+              ],
+            ),
+          );
+        });
+  }
 
   @override
-  _ListaPetFiltradaState createState() => _ListaPetFiltradaState();
-}
-
-class _ListaPetFiltradaState extends State<ListaPetFiltrada> {
-  BuscapetService _buscaService = BuscapetService();
-  UtilsPet _dataUilt = UtilsPet();
-  Global _global = Global();
-
-  @override
-  initState() {
+  void initState() {
     super.initState();
+    _controller.addListener(() {
+      final text = _controller.text.toUpperCase();
+      _controller.value = _controller.value.copyWith(
+        text: text,
+        selection: TextSelection(baseOffset: text.length, extentOffset: text.length),
+        composing: TextRange.empty,
+      );
+    });
+  }
+
+  void selectImages() async {
+    final List<XFile>? selectedImages = await imagePicker.pickMultiImage();
+    if (selectedImages != null && selectedImages.isNotEmpty) {
+      _imageFileList!.addAll(selectedImages);
+    }
+    if (selectedImages!.isNotEmpty) {
+      _imageFileList!.addAll(selectedImages);
+    }
+    print("Image List Length:" + _imageFileList!.length.toString());
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Lista de Pets Filtrada',
-          style: TextStyle(color: Colors.white),
+        appBar: AppBar(
+          title: const Text(
+            'Cadastro do Pet',
+            style: TextStyle(color: Colors.white),
+          ),
+          iconTheme: IconThemeData(color: Colors.white),
+          backgroundColor: Colors.black,
         ),
-        iconTheme: IconThemeData(color: Colors.white),
-        backgroundColor: Colors.black,
-      ),
-      body: FutureBuilder<List<CadastroPet>>(
-        future: _buscaService.getPetList(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            // Aplicar filtros aos pets
-            List<CadastroPet> petsFiltrados = snapshot.data!.where((pet) {
-              bool nomeValido = widget.nomeAnimal.isEmpty ||
-                  pet.nomeAnimal
-                      .toLowerCase()
-                      .contains(widget.nomeAnimal.toLowerCase());
-              bool racaValida = widget.raca == null || pet.raca == widget.raca;
-              bool tipoValido = widget.tipo == null || pet.tipo == widget.tipo;
-              bool situacaoValida =
-                  widget.situacao == null || pet.situacao == widget.situacao;
-              return nomeValido && racaValida && tipoValido && situacaoValida;
-            }).toList();
-
-            if (petsFiltrados.isEmpty) {
-              return Center(
-                child: Text("Nenhum pet encontrado com esses filtros."),
-              );
-            }
-
-            return ListView.builder(
-              itemCount: petsFiltrados.length,
-              itemBuilder: (context, index) {
-                final pet = petsFiltrados[index];
-                return ExpansionTile(
-                  leading: GestureDetector(
-                    onTap: () {
-                      if (pet.imagens.isNotEmpty) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => FullScreenImage(
-                              imageUrl:
-                                  "${_global.urlGeral}/pet/imagem/${pet.imagens[0].nomeArquivo}",
-                            ),
-                          ),
-                        );
+        body: SingleChildScrollView(
+          child: Container(
+            padding: EdgeInsets.all(16),
+            child: FormBuilder(
+              key: _formKey,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  FormBuilderTextField(
+                      name: 'nomeAnimal',
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Este campo é obrigatório';
+                        }
+                        return null;
+                      },
+                      decoration: InputDecoration(labelText: 'Nome do Pet'),
+                      inputFormatters: [UpperCaseTextFormatter()],
+                      keyboardType: TextInputType.text,
+                      onChanged: (String? value) {
+                        setState(() {
+                          nomeAnimal = value!;
+                        });
+                      }),
+                  FormBuilderTextField(
+                      name: 'tipoAnimal',
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Este campo é obrigatório';
+                        }
+                        return null;
+                      },
+                      decoration: InputDecoration(labelText: 'Tipo do Pet'),
+                      inputFormatters: [UpperCaseTextFormatter()],
+                      keyboardType: TextInputType.text,
+                      onChanged: (String? value) {
+                        setState(() {
+                          tipoAnimal = value!;
+                        });
+                      }),
+                  // Dropdown para Raça
+                  FormBuilderDropdown(
+                    name: 'racaAnimal',
+                    decoration: InputDecoration(labelText: 'Raça do Pet'),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Este campo é obrigatório';
                       }
+                      return null;
                     },
-                    child: CircleAvatar(
-                      radius: 25,
-                      backgroundImage: pet.imagens.isNotEmpty
-                          ? CachedNetworkImageProvider(
-                              "${_global.urlGeral}/pet/imagem/${pet.imagens[0].nomeArquivo}")
-                          : null,
-                      child: pet.imagens.isEmpty
-                          ? Icon(Icons.pets, size: 30)
-                          : null,
-                    ),
+                    items: _listaRaca.listaRacas.map((raca) {
+                      return DropdownMenuItem(
+                        value: raca,
+                        child: Text(raca),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _racaSelecionada = newValue;
+                        racaAnimal = newValue!;
+                      });
+                    },
                   ),
-                  title: Text(pet.nomeAnimal,
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, color: Colors.black)),
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text('Tipo: ',
-                                  style: TextStyle(color: Colors.black)),
-                              Expanded(
-                                  child: Text(
-                                pet.tipo,
-                                style: TextStyle(color: Colors.black),
-                                overflow: TextOverflow.ellipsis,
-                              ))
-                            ],
+                  FormBuilderTextField(
+                      name: 'idadeAnimal',
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Este campo é obrigatório';
+                        }
+                        return null;
+                      },
+                      decoration: InputDecoration(labelText: 'Idade do Pet'),
+                      keyboardType: TextInputType.number,
+                      onChanged: (String? value) {
+                        setState(() {
+                          idadeAnimal = value! ?? "0";
+                        });
+                      }),
+                  Column(
+                    children: <Widget>[
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Text(
+                            'Pet Chipado?',
+                            style: TextStyle(fontSize: 15),
                           ),
-                          Row(
-                            children: [
-                              Text('Raça: ',
-                                  style: TextStyle(color: Colors.black)),
-                              Expanded(
-                                  child: Text(
-                                pet.raca,
-                                style: TextStyle(color: Colors.black),
-                                overflow: TextOverflow.ellipsis,
-                              ))
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Text('Status: ',
-                                  style: TextStyle(color: Colors.black)),
-                              Expanded(
-                                  child: Text(
-                                pet.situacao,
-                                style: TextStyle(color: Colors.black),
-                                overflow: TextOverflow.ellipsis,
-                              ))
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Text('Data: ',
-                                  style: TextStyle(color: Colors.black)),
-                              Expanded(
-                                  child: Text(
-                                '${_dataUilt.formatarData(pet.datadodesaparecimento, 'BR')}',
-                                style: TextStyle(color: Colors.black),
-                                overflow: TextOverflow.ellipsis,
-                              )),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Text('Tutor: ',
-                                  style: TextStyle(color: Colors.black)),
-                              Expanded(
-                                  child: Text(
-                                pet.nomeTutor,
-                                style: TextStyle(color: Colors.black),
-                                overflow: TextOverflow.ellipsis,
-                              )),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Text('Celular: ',
-                                  style: TextStyle(color: Colors.black)),
-                              Expanded(
-                                  child: Text(
-                                pet.celular,
-                                style: TextStyle(color: Colors.black),
-                                overflow: TextOverflow.ellipsis,
-                              )),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Text('E-Mail: ',
-                                  style: TextStyle(color: Colors.black)),
-                              Expanded(
-                                child: InkWell(
-                                  onTap: () => launch('mailto:${pet.email}'),
-                                  child: Text(
-                                    pet.email,
-                                    style: TextStyle(
-                                        color: Colors.blue,
-                                        decoration: TextDecoration.underline),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
+                        ),
+                      ),
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: ListTile(
+                              title: const Text('Sim'),
+                              leading: Radio<bool>(
+                                value: true,
+                                groupValue: _chipado,
+                                onChanged: (bool? value) {
+                                  setState(() {
+                                    _chipado = value!;
+                                  });
+                                },
                               ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Text('OBS: ',
-                                  style: TextStyle(color: Colors.black)),
-                              Flexible(
-                                  child: Text(
-                                pet.descricao,
-                                style: TextStyle(color: Colors.black),
-                              )),
-                            ],
-                          ),
-                          SizedBox(height: 10),
-                          ElevatedButton.icon(
-                            icon: Icon(
-                              Icons.camera,
-                              color: Colors.blue,
-                              size: 30,
                             ),
-                            onPressed: () {
-                              List<String> caminho = [];
-                              if (pet.imagens.length >= 2) {
-                                for (var petlista in pet.imagens) {
-                                  petlista.nomeArquivo.toString();
-                                  caminho.add(
-                                      "${_global.urlGeral}/pet/imagem/${petlista.nomeArquivo}");
-                                }
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => TelaDetalhe(
-                                      imageUrls: caminho,
-                                    ),
-                                  ),
-                                );
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content:
-                                        Text('A foto unica e do avatar acima.'),
-                                    backgroundColor:
-                                        Colors.blue, // Cor de fundo para erro
-                                  ),
-                                );
-                              }
-                            },
-                            label: Text('Ver mais fotos.'),
+                          ),
+                          Expanded(
+                            child: ListTile(
+                              title: const Text('Não'),
+                              leading: Radio<bool>(
+                                value: false,
+                                groupValue: _chipado,
+                                onChanged: (bool? value) {
+                                  setState(() {
+                                    _chipado = value!;
+                                  });
+                                },
+                              ),
+                            ),
                           ),
                         ],
                       ),
+                    ],
+                  ),
+                  Column(
+                    children: <Widget>[
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Text(
+                            'Pet Vacinado?',
+                            style: TextStyle(fontSize: 15),
+                          ),
+                        ),
+                      ),
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: ListTile(
+                              title: const Text('Sim'),
+                              leading: Radio<bool>(
+                                value: true,
+                                groupValue: _vacinado,
+                                onChanged: (bool? value) {
+                                  setState(() {
+                                    _vacinado = value!;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: ListTile(
+                              title: const Text('Não'),
+                              leading: Radio<bool>(
+                                value: false,
+                                groupValue: _vacinado,
+                                onChanged: (bool? value) {
+                                  setState(() {
+                                    _vacinado = value!;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Column(
+                    children: <Widget>[
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Text(
+                            'Pet Castrado?',
+                            style: TextStyle(fontSize: 15),
+                          ),
+                        ),
+                      ),
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: ListTile(
+                              title: const Text('Sim'),
+                              leading: Radio<bool>(
+                                value: true,
+                                groupValue: _castrado,
+                                onChanged: (bool? value) {
+                                  setState(() {
+                                    _castrado = value!;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: ListTile(
+                              title: const Text('Não'),
+                              leading: Radio<bool>(
+                                value: false,
+                                groupValue: _castrado,
+                                onChanged: (bool? value) {
+                                  setState(() {
+                                    _castrado = value!;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  FormBuilderTextField(
+                      name: 'descricao',
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Este campo é obrigatório';
+                        }
+                        return null;
+                      },
+                      decoration: InputDecoration(labelText: 'Observação sobre o Pet'),
+                      keyboardType: TextInputType.text,
+                      maxLines: 5,
+                      onChanged: (String? value) {
+                        setState(() {
+                          descricaoAnimal = value!;
+                        });
+                      }),
+                  FormBuilderTextField(
+                      focusNode: _focusNodeData,
+                      name: 'dataDesa',
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Este campo é obrigatório';
+                        }
+                        return null;
+                      },
+                      decoration:
+                          InputDecoration(labelText: 'Data do Desaparecimento'),
+                      controller: _controllerData,
+                      keyboardType: TextInputType.text,
+                      onTap: () {
+                        _selecionarData(context).then((_) {
+                          FocusScope.of(context).requestFocus(_focusNodeData);
+                        });
+                      },
+                      onChanged: (String? value) {
+                        setState(() {
+                          dataDesaparecimento = value!;
+                        });
+                      }),
+                  FormBuilderTextField(
+                      name: 'endereco',
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Este campo é obrigatório';
+                        }
+                        return null;
+                      },
+                      decoration: InputDecoration(labelText: 'Endereco'),
+                      inputFormatters: [UpperCaseTextFormatter()],
+                      keyboardType: TextInputType.text,
+                      onChanged: (String? value) {
+                        setState(() {
+                          enderecoPet = value!;
+                        });
+                      }),
+                  FormBuilderTextField(
+                      name: 'bairro',
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Este campo é obrigatório';
+                        }
+                        return null;
+                      },
+                      decoration: InputDecoration(labelText: 'Bairro'),
+                      inputFormatters: [UpperCaseTextFormatter()],
+                      keyboardType: TextInputType.text,
+                      onChanged: (String? value) {
+                        setState(() {
+                          bairroPet = value!;
+                        });
+                      }),
+                  FormBuilderTextField(
+                      name: 'cidadeEstado',
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Este campo é obrigatório';
+                        }
+                        return null;
+                      },
+                      decoration: InputDecoration(labelText: 'Cidade'),
+                      inputFormatters: [UpperCaseTextFormatter()],
+                      keyboardType: TextInputType.text,
+                      onChanged: (String? value) {
+                        setState(() {
+                          cidadeEstado = value!;
+                        });
+                      }),
+                  // Dropdown para Estado
+                  FormBuilderDropdown(
+                    name: 'estadoPet',
+                    decoration: InputDecoration(labelText: 'Estado'),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Este campo é obrigatório';
+                      }
+                      return null;
+                    },
+                    items: _listaEstados.estados.map((estado) {
+                      return DropdownMenuItem(
+                        value: estado,
+                        child: Text(estado),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _estadoSelecionado = newValue;
+                        estadoPet = newValue!;
+                      });
+                    },
+                  ),
+                  FormBuilderTextField(
+                      name: 'nomeTutor',
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Este campo é obrigatório';
+                        }
+                        return null;
+                      },
+                      decoration:
+                          InputDecoration(labelText: 'Nome do Responsável'),
+                      inputFormatters: [UpperCaseTextFormatter()],
+                      keyboardType: TextInputType.text,
+                      onChanged: (String? value) {
+                        setState(() {
+                          nomeTutor = value!;
+                        });
+                      }),
+                  FormBuilderTextField(
+                    name: 'email',
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Este campo é obrigatório';
+                      }
+                      if (!_validarEmail.validarEmail(value)) {
+                        return 'E-Mail inválido';
+                      }
+                      return null;
+                    },
+                    decoration: InputDecoration(labelText: 'Email de Contato'),
+                    inputFormatters: [LowCaseTextFormatter()],
+                    keyboardType: TextInputType.emailAddress,
+                    onChanged: (String? value) {
+                      setState(() {
+                        emailTutor = value!;
+                      });
+                    },
+                  ),
+                  FormBuilderTextField(
+                      name: 'celularTutor',
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Este campo é obrigatório';
+                        }
+                        return null;
+                      },
+                      decoration:
+                          InputDecoration(labelText: 'Celular(DD) "WhatsApp"'),
+                      inputFormatters: [
+                        MaskedInputFormatter('(##) #####-####'),
+                      ],
+                      keyboardType: TextInputType.phone,
+                      onChanged: (String? value) {
+                        setState(() {
+                          celularTutor = value!;
+                        });
+                      }),
+                  SizedBox(height: 20),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          'Fotos do Pet',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        height: 100,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey, width: 1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _imagens.length,
+                          itemBuilder: (context, index) {
+                            return InkWell(
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      title: const Text(
+                                        'Aviso!',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(fontSize: 18),
+                                      ),
+                                      content: Text(
+                                        'Excluir esta foto?',
+                                        style: TextStyle(
+                                            fontSize: 14, color: Colors.blue),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          child: Text('Cancelar'),
+                                          onPressed: () =>
+                                              Navigator.of(context).pop(),
+                                        ),
+                                        TextButton(
+                                          child: Text('Excluir'),
+                                          onPressed: () {
+                                            setState(() {
+                                              _imagens.removeAt(index);
+                                            });
+                                            Navigator.of(context).pop();
+                                          },
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Image.file(_imagens[index]),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      Text("Toque na foto para excluir da lista.")
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton.icon(
+                    icon: Icon(
+                      Icons.camera,
+                      size: 40,
+                      color: Colors.white,
                     ),
-                  ],
-                );
-              },
-            );
-          } else if (snapshot.hasError) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content:
-                      Text('Erro ao carregar lista de pets: ${snapshot.error}'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            });
-            return Center(child: Text('Erro ao carregar dados'));
-          }
-          return const Center(child: CircularProgressIndicator());
-        },
-      ),
-    );
+                    label: Text(
+                      'Adicionar Fotos',
+                      style: TextStyle(fontSize: 22, color: Colors.white),
+                    ),
+                    onPressed: () async {
+                      if (_imagens.length == 4) {
+                        final BuildContext contextoTela = context;
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text('Aviso!', textAlign: TextAlign.center),
+                              content: Text(
+                                'Já tem o limite de imagens permitida! O limite e de quatro fotos.',
+                              ),
+                              actions: [
+                                TextButton(
+                                  child: Text('Fechar'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      } else {
+                        _adicionarFoto(context);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue),
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton.icon(
+                    icon: Icon(
+                      Icons.pets,
+                      size: 40,
+                      color: Colors.white,
+                    ),
+                    label: Text('Cadastrar',
+                        style: TextStyle(fontSize: 22, color: Colors.white)),
+                    onPressed: () async {
+                      List<String> nomesArquivos = _imagens
+                          .map((file) => file.path.split('/').last)
+                          .toList();
+                      List<ImagemPet> imagensPet = [];
+                      for (String nome in nomesArquivos) {
+                        var imagemPet = ImagemPet(
+                          id: 0,
+                          caminhoImagem: '/home/nelson/imagenspet',
+                          nomeArquivo: nome,
+                          tipo: 'imagem',
+                        );
+                        imagensPet.add(imagemPet);
+                      }
+
+                      CadastroPet meuCadastro = CadastroPet(
+                        id: 0,
+                        nomeAnimal: nomeAnimal,
+                        tipo: tipoAnimal,
+                        raca: racaAnimal,
+                        idade: idadeAnimal,
+                        chipado: _chipado,
+                        vacinado: _vacinado,
+                        castrado: _castrado,
+                        descricao: descricaoAnimal,
+                        situacao: 'DESAPARECIDO',
+                        datadodesaparecimento:
+                            _utilsPet.formatarData(dataDesaparecimento, 'US'),
+                        endereco: enderecoPet,
+                        bairro: bairroPet,
+                        cidade: cidadeEstado,
+                        estado: estadoPet,
+                        nomeTutor: nomeTutor,
+                        email: emailTutor,
+                        celular: celularTutor.toString(),
+                        imagens: imagensPet,
+                      );
+                      if (_formKey.currentState!.validate()) {
+                        _showMyDialog(context, meuCadastro);
+                      }
+                    },
+                    style:
+                        ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton.icon(
+                    icon: Icon(
+                      Icons.cancel,
+                      size: 40,
+                      color: Colors.white,
+                    ),
+                    label: Text('Cancelar',
+                        style: TextStyle(fontSize: 22, color: Colors.white)),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ));
   }
 }
 
-// Widget para exibir uma imagem em tela cheia
-class FullScreenImage extends StatelessWidget {
-  final String imageUrl;
-
-  FullScreenImage({required this.imageUrl});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: GestureDetector(
-        onTap: () {
-          Navigator.pop(context);
-        },
-        child: PhotoView(
-          backgroundDecoration: BoxDecoration(
-              color: Colors.black, borderRadius: BorderRadius.circular(20)),
-          enableRotation: true,
-          enablePanAlways: true,
-          semanticLabel: 'Foto do Pet',
-          imageProvider: CachedNetworkImageProvider(imageUrl),
-        ),
-      ),
-    );
-  }
-}
-
-//Classe para caixa alta
 class UpperCaseTextFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
@@ -472,4 +961,75 @@ class UpperCaseTextFormatter extends TextInputFormatter {
       selection: newValue.selection,
     );
   }
+}
+
+class LowCaseTextFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    return TextEditingValue(
+      text: newValue.text.toLowerCase(),
+      selection: newValue.selection,
+    );
+  }
+}
+
+// Classe para exibir a mensagem centralizada
+class MensagemCentralizada extends StatelessWidget {
+  final String mensagem;
+
+  MensagemCentralizada({required this.mensagem});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      content: Text(
+        mensagem,
+        textAlign: TextAlign.center,
+        style: TextStyle(fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+}
+
+// Classes para as listas de Raças e Estados (ajuste conforme necessário)
+class ListaRacaCaes {
+  final List<String> listaRacas = [
+    'Pastor Alemão',
+    'Labrador Retriever',
+    'Golden Retriever',
+    // Adicione mais raças aqui
+  ];
+}
+
+class ListaEstados {
+  final List<String> estados = [
+    'AC',
+    'AL',
+    'AP',
+    'AM',
+    'BA',
+    'CE',
+    'DF',
+    'ES',
+    'GO',
+    'MA',
+    'MT',
+    'MS',
+    'MG',
+    'PA',
+    'PB',
+    'PR',
+    'PE',
+    'PI',
+    'RJ',
+    'RN',
+    'RS',
+    'RO',
+    'RR',
+    'SC',
+    'SP',
+    'SE',
+    'TO'
+  ];
 }
