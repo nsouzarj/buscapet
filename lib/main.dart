@@ -19,7 +19,7 @@ void main() {
       '/splash': (context) => SplashScreen(),
       '/menu': (context) => MenuPrincipal(),
       '/login': (context) => LoginScreen(),
-      '/listaPets': (context) => ListaPet(),
+      '/listaPets': (context) => TelaFiltroPet(),
       '/cadastro': (context) =>  FormularioCadastroPet(),
     },
   ));

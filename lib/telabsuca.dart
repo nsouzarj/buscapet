@@ -58,7 +58,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
               title: Text('Buscar Pet'),
               onTap: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => ListaPet()),
+                  MaterialPageRoute(builder: (context) => TelaFiltroPet()),
                 );
               },
             ),
@@ -116,7 +116,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                   ),
                   onPressed: () {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (context) => ListaPet()),
+                      MaterialPageRoute(builder: (context) => TelaFiltroPet()),
                     );
                   },
                   style: ElevatedButton.styleFrom(

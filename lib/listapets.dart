@@ -3,21 +3,197 @@ import 'package:buscapet/classesutils/utilspet.dart';
 import 'package:buscapet/services/buscapetservice.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/services.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'fotospets.dart';
 
-/// Widget stateful que exibe uma lista de pets cadastrados.
-class ListaPet extends StatefulWidget {
+// Tela de filtro
+class TelaFiltroPet extends StatefulWidget {
   @override
-  _TelaDeCadastroState createState() => _TelaDeCadastroState();
+  _TelaFiltroPetState createState() => _TelaFiltroPetState();
 }
 
-/// Estado do widget ListaPet.
-class _TelaDeCadastroState extends State<ListaPet> {
-  BuscapetService _buscaService = BuscapetService(); // Serviço para buscar pets.
-  UtilsPet _dataUilt = UtilsPet(); // Utilitário para formatar datas.
-  Global _global = Global(); // Variável global com configurações.
+class _TelaFiltroPetState extends State<TelaFiltroPet> {
+  final _formKey = GlobalKey<FormState>();
+  final _nomeAnimalController = TextEditingController();
+  final _racaController = TextEditingController();
+  final _tipoController = TextEditingController();
+  final _situacaoController = TextEditingController();
+  final ListaRacaCaes _listaRaca = ListaRacaCaes();
+
+  // Variáveis para armazenar os valores selecionados nos filtros
+  String? _racaSelecionada;
+  String? _tipoSelecionado;
+  String? _situacaoSelecionada;
+
+  @override
+  Widget build(BuildContext context) {
+    // Lista de opções para os filtros
+    final List<String> _listaRacas =
+        _listaRaca.ListaRaca(); // Substitua pelas raças reais
+    final List<String> _listaTipos = ['CANINO', 'FELINO', 'OUTRO'];
+    final List<String> _listaSituacoes = [
+      'DESAPARECIDO',
+      'ABANDONADO',
+      'ADOCAO'
+    ];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Filtrar Pets',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.black,
+        iconTheme: IconThemeData(color: Colors.white),
+      ),
+      body: Form(
+        key: _formKey,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Campo de texto para o nome do animal
+              TextFormField(
+                controller: _nomeAnimalController,
+                inputFormatters: [UpperCaseTextFormatter()],
+                decoration: InputDecoration(
+                  labelText: 'Nome do Pet',
+                ),
+              ),
+              SizedBox(height: 20),
+              // Dropdown para selecionar o tipo
+              DropdownButtonFormField<String>(
+                value: _tipoSelecionado,
+                onChanged: (value) {
+                  setState(() {
+                    _tipoSelecionado = value;
+                  });
+                },
+                items: _listaTipos.map((tipo) {
+                  return DropdownMenuItem(
+                    value: tipo,
+                    child: Text(tipo),
+                  );
+                }).toList(),
+                decoration: InputDecoration(
+                  labelText: 'Tipo',
+                ),
+              ),
+              DropdownButtonFormField<String>(
+                value: _racaSelecionada,
+                onChanged: (value) {
+                  setState(() {
+                    _racaSelecionada = value;
+                  });
+                },
+                items: _listaRacas.map((raca) {
+                  return DropdownMenuItem(
+                    value: raca,
+                    child: Text(
+                      raca,
+                      style: TextStyle(fontSize: 13),
+                    ),
+                  );
+                }).toList(),
+                decoration: InputDecoration(
+                  labelText: 'Raça',
+                ),
+              ),
+              // Dropdown para selecionar a raça
+              SizedBox(height: 20),
+              // Dropdown para selecionar a situação
+              DropdownButtonFormField<String>(
+                value: _situacaoSelecionada,
+                onChanged: (value) {
+                  setState(() {
+                    _situacaoSelecionada = value;
+                  });
+                },
+                items: _listaSituacoes.map((situacao) {
+                  return DropdownMenuItem(
+                    value: situacao,
+                    child: Text(situacao),
+                  );
+                }).toList(),
+                decoration: InputDecoration(
+                  labelText: 'Situação',
+                ),
+              ),
+              SizedBox(height: 32),
+              // Botão para aplicar os filtros
+              ElevatedButton(
+                onPressed: () {
+                  // Obter os valores dos filtros
+                  String nomeAnimal = _nomeAnimalController.text;
+                  String? raca = _racaSelecionada;
+                  String? tipo = _tipoSelecionado;
+                  String? situacao = _situacaoSelecionada;
+                  // Passar os filtros para a tela da lista de pets
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ListaPetFiltrada(
+                        nomeAnimal: nomeAnimal,
+                        raca: raca,
+                        tipo: tipo,
+                        situacao: situacao,
+                      ),
+                    ),
+                  );
+                },
+                child: Text('Aplicar Filtros'),
+              ),
+              SizedBox(height: 16),
+              // Botão para limpar os filtros
+              ElevatedButton(
+                onPressed: () {
+                  _limparFiltros();
+                },
+                child: Text('Limpar Filtros'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Método para limpar os filtros
+  void _limparFiltros() {
+    setState(() {
+      _nomeAnimalController.clear();
+      _racaSelecionada = null;
+      _tipoSelecionado = null;
+      _situacaoSelecionada = null;
+    });
+  }
+}
+
+// Tela da lista de pets filtrada
+class ListaPetFiltrada extends StatefulWidget {
+  final String nomeAnimal;
+  final String? raca;
+  final String? tipo;
+  final String? situacao;
+
+  ListaPetFiltrada({
+    required this.nomeAnimal,
+    required this.raca,
+    required this.tipo,
+    required this.situacao,
+  });
+
+  @override
+  _ListaPetFiltradaState createState() => _ListaPetFiltradaState();
+}
+
+class _ListaPetFiltradaState extends State<ListaPetFiltrada> {
+  BuscapetService _buscaService = BuscapetService();
+  UtilsPet _dataUilt = UtilsPet();
+  Global _global = Global();
 
   @override
   initState() {
@@ -29,28 +205,42 @@ class _TelaDeCadastroState extends State<ListaPet> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Lista de Pets',
+          'Lista de Pets Filtrada',
           style: TextStyle(color: Colors.white),
         ),
         iconTheme: IconThemeData(color: Colors.white),
         backgroundColor: Colors.black,
       ),
       body: FutureBuilder<List<CadastroPet>>(
-        future: _buscaService.getPetList(), // Busca a lista de pets.
+        future: _buscaService.getPetList(),
         builder: (context, snapshot) {
-          // Se os dados foram carregados com sucesso...
           if (snapshot.hasData) {
-            return ListView.builder(
-              itemCount: snapshot.data!.length,
-              itemBuilder: (context, index) {
-                final pet = snapshot.data![index]; // Obtém o pet atual.
+            // Aplicar filtros aos pets
+            List<CadastroPet> petsFiltrados = snapshot.data!.where((pet) {
+              bool nomeValido = widget.nomeAnimal.isEmpty ||
+                  pet.nomeAnimal
+                      .toLowerCase()
+                      .contains(widget.nomeAnimal.toLowerCase());
+              bool racaValida = widget.raca == null || pet.raca == widget.raca;
+              bool tipoValido = widget.tipo == null || pet.tipo == widget.tipo;
+              bool situacaoValida =
+                  widget.situacao == null || pet.situacao == widget.situacao;
+              return nomeValido && racaValida && tipoValido && situacaoValida;
+            }).toList();
 
-                // Widget ExpansionTile para exibir detalhes do pet.
+            if (petsFiltrados.isEmpty) {
+              return Center(
+                child: Text("Nenhum pet encontrado com esses filtros."),
+              );
+            }
+
+            return ListView.builder(
+              itemCount: petsFiltrados.length,
+              itemBuilder: (context, index) {
+                final pet = petsFiltrados[index];
                 return ExpansionTile(
-                  // Avatar do pet.
                   leading: GestureDetector(
                     onTap: () {
-                      // Se o pet tiver imagens, exibe a primeira em tela cheia.
                       if (pet.imagens.isNotEmpty) {
                         Navigator.push(
                           context,
@@ -65,105 +255,96 @@ class _TelaDeCadastroState extends State<ListaPet> {
                     },
                     child: CircleAvatar(
                       radius: 25,
-                      // Exibe a imagem do avatar do pet.
                       backgroundImage: pet.imagens.isNotEmpty
                           ? CachedNetworkImageProvider(
                               "${_global.urlGeral}/pet/imagem/${pet.imagens[0].nomeArquivo}")
                           : null,
-                      // Se não houver imagem, exibe um ícone padrão.
                       child: pet.imagens.isEmpty
                           ? Icon(Icons.pets, size: 30)
                           : null,
                     ),
                   ),
-                  // Título do ExpansionTile, exibindo o nome do animal.
                   title: Text(pet.nomeAnimal,
                       style: TextStyle(
                           fontWeight: FontWeight.bold, color: Colors.black)),
-                  // Detalhes do pet exibidos quando o ExpansionTile é expandido.
                   children: [
                     Container(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Linha com a raça do pet.
                           Row(
                             children: [
-                              Text('Raça: ', style: TextStyle(color: Colors.black)),
+                              Text('Tipo: ',
+                                  style: TextStyle(color: Colors.black)),
                               Expanded(
                                   child: Text(
-                                    pet.tipo,
-                                    style: TextStyle(color: Colors.black),
-                                    overflow: TextOverflow.ellipsis,
-                                  ))
+                                pet.tipo,
+                                style: TextStyle(color: Colors.black),
+                                overflow: TextOverflow.ellipsis,
+                              ))
                             ],
                           ),
-                          // Linha com o tipo do pet.
                           Row(
                             children: [
-                              Text('Tipo: ', style: TextStyle(color: Colors.black)),
+                              Text('Raça: ',
+                                  style: TextStyle(color: Colors.black)),
                               Expanded(
                                   child: Text(
-                                    pet.raca,
-                                    style: TextStyle(color: Colors.black),
-                                    overflow: TextOverflow.ellipsis,
-                                  ))
+                                pet.raca,
+                                style: TextStyle(color: Colors.black),
+                                overflow: TextOverflow.ellipsis,
+                              ))
                             ],
                           ),
-                          // Linha com o status do pet.
                           Row(
                             children: [
                               Text('Status: ',
                                   style: TextStyle(color: Colors.black)),
                               Expanded(
                                   child: Text(
-                                    pet.situacao,
-                                    style: TextStyle(color: Colors.black),
-                                    overflow: TextOverflow.ellipsis,
-                                  ))
+                                pet.situacao,
+                                style: TextStyle(color: Colors.black),
+                                overflow: TextOverflow.ellipsis,
+                              ))
                             ],
                           ),
-                          // Linha com a data de desaparecimento do pet.
                           Row(
                             children: [
                               Text('Data: ',
                                   style: TextStyle(color: Colors.black)),
                               Expanded(
                                   child: Text(
-                                    '${_dataUilt.formatarData(pet.datadodesaparecimento, 'BR')}',
-                                    style: TextStyle(color: Colors.black),
-                                    overflow: TextOverflow.ellipsis,
-                                  )),
+                                '${_dataUilt.formatarData(pet.datadodesaparecimento, 'BR')}',
+                                style: TextStyle(color: Colors.black),
+                                overflow: TextOverflow.ellipsis,
+                              )),
                             ],
                           ),
-                          // Linha com o nome do tutor do pet.
                           Row(
                             children: [
                               Text('Tutor: ',
                                   style: TextStyle(color: Colors.black)),
                               Expanded(
                                   child: Text(
-                                    pet.nomeTutor,
-                                    style: TextStyle(color: Colors.black),
-                                    overflow: TextOverflow.ellipsis,
-                                  )),
+                                pet.nomeTutor,
+                                style: TextStyle(color: Colors.black),
+                                overflow: TextOverflow.ellipsis,
+                              )),
                             ],
                           ),
-                          // Linha com o número de celular do tutor.
                           Row(
                             children: [
                               Text('Celular: ',
                                   style: TextStyle(color: Colors.black)),
                               Expanded(
                                   child: Text(
-                                    pet.celular,
-                                    style: TextStyle(color: Colors.black),
-                                    overflow: TextOverflow.ellipsis,
-                                  )),
+                                pet.celular,
+                                style: TextStyle(color: Colors.black),
+                                overflow: TextOverflow.ellipsis,
+                              )),
                             ],
                           ),
-                          // Linha com o endereço de e-mail do tutor.
                           Row(
                             children: [
                               Text('E-Mail: ',
@@ -182,20 +363,18 @@ class _TelaDeCadastroState extends State<ListaPet> {
                               ),
                             ],
                           ),
-                          // Linha com observações sobre o pet.
                           Row(
                             children: [
                               Text('OBS: ',
                                   style: TextStyle(color: Colors.black)),
                               Flexible(
                                   child: Text(
-                                    pet.descricao,
-                                    style: TextStyle(color: Colors.black),
-                                  )),
+                                pet.descricao,
+                                style: TextStyle(color: Colors.black),
+                              )),
                             ],
                           ),
                           SizedBox(height: 10),
-                          // Botão para visualizar mais fotos do pet.
                           ElevatedButton.icon(
                             icon: Icon(
                               Icons.camera,
@@ -239,19 +418,17 @@ class _TelaDeCadastroState extends State<ListaPet> {
               },
             );
           } else if (snapshot.hasError) {
-            // Se houve um erro ao carregar os dados...
             WidgetsBinding.instance.addPostFrameCallback((_) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(
-                      'Erro ao carregar lista de pets: ${snapshot.error}'),
+                  content:
+                      Text('Erro ao carregar lista de pets: ${snapshot.error}'),
                   backgroundColor: Colors.red,
                 ),
               );
             });
             return Center(child: Text('Erro ao carregar dados'));
           }
-          // Enquanto os dados estão sendo carregados, exibe um indicador de progresso.
           return const Center(child: CircularProgressIndicator());
         },
       ),
@@ -259,7 +436,7 @@ class _TelaDeCadastroState extends State<ListaPet> {
   }
 }
 
-/// Widget para exibir uma imagem em tela cheia.
+// Widget para exibir uma imagem em tela cheia
 class FullScreenImage extends StatelessWidget {
   final String imageUrl;
 
@@ -281,6 +458,18 @@ class FullScreenImage extends StatelessWidget {
           imageProvider: CachedNetworkImageProvider(imageUrl),
         ),
       ),
+    );
+  }
+}
+
+//Classe para caixa alta
+class UpperCaseTextFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    return TextEditingValue(
+      text: newValue.text.toUpperCase(),
+      selection: newValue.selection,
     );
   }
 }
