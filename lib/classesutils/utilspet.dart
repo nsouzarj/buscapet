@@ -280,7 +280,7 @@ class ListaRacaCaes {
 
 //Traz lista de estados
 class ListaEstados {
- static const List<String> _listaEstados = [
+  static final List<String> _listaEstados = [
     'ACRE (AC)',
     'ALAGOAS (AL)',
     'AMAPÁ (AP)',
@@ -312,5 +312,60 @@ class ListaEstados {
 
   List<String> listaEstados() {
     return _listaEstados;
+  }
+}
+
+class ListaRacaGatos {
+  static final List<String> racadeGatos = [
+  'ABISSÍNIO',
+  'AMERICAN CURL',
+  'AMERICAN SHORTHAIR',
+  'AMERICAN WIREHAIR',
+  'BALINES',
+  'BENGAL',
+  'BIRMANÊS',
+  'BOBTAIL AMERICANO',
+  'BOBTAIL JAPONÊS',
+  'BOMBAIM',
+  'BRASILEIRO CURL',
+  'BRITISH SHORTHAIR',
+  'BURMÊS',
+  'CHARTREUX',
+  'COLORPOINT SHORTHAIR',
+  'CORNISH REX',
+  'DEVON REX',
+  'DON SPHYNX',
+  'EUROPEU',
+  'EXÓTICO',
+  'HIMALAIO',
+  'JAVANÊS',
+  'KHAO MANEE',
+  'KORAT',
+  'LAPERM',
+  'MAIN COON',
+  'MANX',
+  'MUNCHKIN',
+  'NORUEGUÊS DA FLORESTA',
+  'OCICAT',
+  'ORIENTAL',
+  'PERSA',
+  'PELO CURTO BRASILEIRO',
+  'RAGAMUFFIN',
+  'RAGDOLL',
+  'RUSSO AZUL',
+  'SAGRADO DA BIRMÂNIA',
+  'SCOTTISH FOLD',
+  'SELKIRK REX',
+  'SIAMES',
+  'SIBERIANO',
+  'SINGAPURA',
+  'SOMALI',
+  'SPHYNX',
+  'TONQUINÊS',
+  'TURCO ANGORÁ',
+  'TURCO VAN'
+];
+  List<String> racadeGatosConhecidas() {
+    return racadeGatos;
   }
 }

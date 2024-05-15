@@ -27,7 +27,6 @@ class _TelaDeDetalhe extends State<TelaDetalhe> {
   @override
   Widget build(BuildContext context) {
     /// Constrói a interface da tela de detalhes.
-    /// 
     /// Retorna um Scaffold contendo uma AppBar com título "Imagens do Pet" e um body
     /// com um ListView.builder que exibe as imagens dos pets. Cada imagem é exibida
     /// dentro de um GestureDetector que permite a navegação para a tela de zoom
@@ -68,7 +67,7 @@ class _TelaDeDetalhe extends State<TelaDetalhe> {
                     ),
                   ),
                 ),
-                Text("Toque na foto para ampliar", style: TextStyle(color: Colors.blue),),
+                Text("Toque na imagem para ampliar", style: TextStyle(color: Colors.blue),),
                 const Divider(),
               ],
             ),
@@ -112,8 +111,9 @@ class TelaFotoZoom extends StatelessWidget {
         },
         child: PhotoView(
           backgroundDecoration: BoxDecoration(color: Colors.black),
-          enableRotation: true,
-          enablePanAlways: true,
+          // enableRotation: true,
+          // enablePanAlways: true,
+          // tightMode: true,
           semanticLabel: 'Foto do Pet',
           imageProvider: CachedNetworkImageProvider(imageUrl),
         ),

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:buscapet/classes/classecadastro.dart';
 import 'package:buscapet/listapets.dart';
 import 'package:buscapet/loginscreen.dart';
 import 'package:buscapet/menuprincipal.dart';
@@ -20,7 +21,7 @@ void main() {
       '/menu': (context) => MenuPrincipal(),
       '/login': (context) => LoginScreen(),
       '/listaPets': (context) =>  TelaFiltroPet(),
-      '/cadastro': (context) =>  CadastroPet(),
+      '/cadastro': (context) =>  FormularioCadastroPet(),
     },
   ));
 }

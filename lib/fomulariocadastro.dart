@@ -64,6 +64,12 @@ class _TelaDeCadastroState extends State<FormularioCadastroPet> {
   //Servico de imagem
   ServiceImages _serviceImages = new ServiceImages();
   ValidaEmail _validarEmail = ValidaEmail();
+
+  //Carega as lista
+  final ListaRacaCaes _listaRacaCaes = ListaRacaCaes();
+  final ListaRacaGatos _listaRacaGatos = ListaRacaGatos();
+  final ListaEstados _listaEstados = ListaEstados();
+
   //Campos para a classe Aninal
   String nomeAnimal = "";
   String tipoAnimal = "";
@@ -74,15 +80,24 @@ class _TelaDeCadastroState extends State<FormularioCadastroPet> {
   bool _castrado = false;
   String descricaoAnimal = "";
   String dataDesaparecimento = "";
-  String bairroAnimal = "";
-  String cidadeEstado = "";
+  String bairroPet = "";
+  String enderecoPet = "";
+  String cidadePet = "";
+  String estadoPet = "";
   String nomeTutor = "";
   String emailTutor = "";
   String celularTutor = "";
 
+  String? _estadoSelecionado;
+  String? _racaSelecionada;
+  String? _tipopetSelecionado;
+  String? _situacaoSelecioanda;
+
   List<File> _imagens = []; // Definição da variável para armazenar a imagem
   List<XFile> _imageFileList = []; //Definiacao para multiplos arquivos
   final ImagePicker imagePicker = ImagePicker();
+
+  //Acioan o calendario
   Future<void> _selecionarData(BuildContext context) async {
     // Intl.defaultLocale = 'pt_BR';
     final DateTime? dataEscolhida = await showDatePicker(
@@ -398,6 +413,17 @@ class _TelaDeCadastroState extends State<FormularioCadastroPet> {
 
   @override
   Widget build(BuildContext context) {
+    final List<String> _listaestados = _listaEstados.listaEstados();
+    final List<String> _listaTipoPet = ['CANINO', 'FELINO', 'OUTROS'];
+    final List<String> _listaSituacao = [
+      'ABANDONADO',
+      'DESAPARECIDO',
+      'ADOÇÂO'
+    ]; //ENCONTRADO //ADOTADO
+    final List<String> _listaracaes = _listaRacaCaes.ListaRaca();
+    final List<String> _listaracgatos = _listaRacaGatos.racadeGatosConhecidas();
+    final List<String> _listaracas = [];
+
     return Scaffold(
         appBar: AppBar(
           title: const Text(
@@ -432,38 +458,81 @@ class _TelaDeCadastroState extends State<FormularioCadastroPet> {
                           nomeAnimal = value!;
                         });
                       }),
-                  FormBuilderTextField(
-                      name: 'tipoAnimal',
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Este campo é obrigatório';
-                        }
-                        return null;
-                      },
-                      decoration: InputDecoration(labelText: 'Tipo do Pet'),
-                      inputFormatters: [UpperCaseTextFormatter()],
-                      keyboardType: TextInputType.text,
-                      onChanged: (String? value) {
-                        setState(() {
-                          tipoAnimal = value!;
-                        });
-                      }),
-                  FormBuilderTextField(
-                      name: 'racaAnimal',
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Este campo é obrigatório';
-                        }
-                        return null;
-                      },
-                      decoration: InputDecoration(labelText: 'Raça do Pet'),
-                      inputFormatters: [UpperCaseTextFormatter()],
-                      keyboardType: TextInputType.text,
-                      onChanged: (String? value) {
-                        setState(() {
-                          racaAnimal = value!;
-                        });
-                      }),
+                  FormBuilderDropdown<String>(
+                    name: 'situacao', // Nome do campo no FormBuilder
+                    decoration: InputDecoration(labelText: 'Situação do Pet'),
+                    initialValue: _situacaoSelecioanda,
+
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Este campo é obrigatório';
+                      }
+                      return null;
+                    },
+                    items: _listaSituacao.map((situacao) {
+                      return DropdownMenuItem(
+                        value: situacao,
+                        child: Text(situacao),
+                      );
+                    }).toList(),
+                    onChanged: (String? novoValor) {
+                      setState(() {
+                        _situacaoSelecioanda = novoValor!;
+                      });
+                    },
+                  ),
+
+                  FormBuilderDropdown<String>(
+                    name: 'tipoAnimal', // Nome do campo no FormBuilder
+                    decoration: InputDecoration(labelText: 'Tipo do Pet'),
+                    initialValue: _tipopetSelecionado,
+
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Este campo é obrigatório';
+                      }
+                      return null;
+                    },
+                    items: _listaTipoPet.map((tipo) {
+                      return DropdownMenuItem(
+                        value: tipo,
+                        child: Text(tipo),
+                      );
+                    }).toList(),
+                    onChanged: (String? novoValor) {
+                      setState(() {
+                        _tipopetSelecionado = novoValor!;
+                        _racaSelecionada = null;
+                      });
+                    },
+                  ),
+
+                  FormBuilderDropdown<String>(
+                    name: 'raca', // Nome do campo no FormBuilder
+                    decoration: InputDecoration(labelText: 'Raça do Pet'),
+                    initialValue: _racaSelecionada,
+
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Este campo é obrigatório';
+                      }
+                      return null;
+                    },
+                    items: (_tipopetSelecionado == 'CANINO'
+                            ? _listaracaes
+                            : _listaracgatos)
+                        .map((raca) {
+                      return DropdownMenuItem(
+                        value: raca,
+                        child: Text(raca),
+                      );
+                    }).toList(),
+                    onChanged: (String? novoValor) {
+                      setState(() {
+                        _racaSelecionada = novoValor!;
+                      });
+                    },
+                  ),
 
                   FormBuilderTextField(
                       name: 'idadeAnimal',
@@ -648,7 +717,7 @@ class _TelaDeCadastroState extends State<FormularioCadastroPet> {
                         return null;
                       },
                       decoration:
-                          InputDecoration(labelText: 'Data do Desaparecimento'),
+                          InputDecoration(labelText: 'Data do Ocorrido'),
                       controller: _controllerData,
                       keyboardType: TextInputType.text,
                       onTap: () {
@@ -660,6 +729,22 @@ class _TelaDeCadastroState extends State<FormularioCadastroPet> {
                       onChanged: (String? value) {
                         setState(() {
                           dataDesaparecimento = value!;
+                        });
+                      }),
+                  FormBuilderTextField(
+                      name: 'endereco',
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Este campo é obrigatório';
+                        }
+                        return null;
+                      },
+                      decoration: InputDecoration(labelText: 'Endereço'),
+                      inputFormatters: [UpperCaseTextFormatter()],
+                      keyboardType: TextInputType.text,
+                      onChanged: (String? value) {
+                        setState(() {
+                          enderecoPet = value!;
                         });
                       }),
 
@@ -676,25 +761,51 @@ class _TelaDeCadastroState extends State<FormularioCadastroPet> {
                       keyboardType: TextInputType.text,
                       onChanged: (String? value) {
                         setState(() {
-                          bairroAnimal = value!;
+                          estadoPet = value!;
                         });
                       }),
+
                   FormBuilderTextField(
-                      name: 'cidadeEstado',
+                      name: 'cidadepet',
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Este campo é obrigatório';
                         }
                         return null;
                       },
-                      decoration: InputDecoration(labelText: 'Cidade/Estado'),
+                      decoration: InputDecoration(labelText: 'Cidade'),
                       inputFormatters: [UpperCaseTextFormatter()],
                       keyboardType: TextInputType.text,
                       onChanged: (String? value) {
                         setState(() {
-                          cidadeEstado = value!;
+                          cidadePet = value!;
                         });
                       }),
+
+                  FormBuilderDropdown<String>(
+                    name: 'estado', // Nome do campo no FormBuilder
+                    decoration: InputDecoration(labelText: 'Estado'),
+                    initialValue: _estadoSelecionado,
+
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Este campo é obrigatório';
+                      }
+                      return null;
+                    },
+                    items: _listaestados.map((estado) {
+                      return DropdownMenuItem(
+                        value: estado,
+                        child: Text(estado),
+                      );
+                    }).toList(),
+                    onChanged: (String? novoValor) {
+                      setState(() {
+                        _estadoSelecionado = novoValor!;
+                      });
+                    },
+                  ),
+
                   FormBuilderTextField(
                       name: 'nomeTutor',
                       validator: (value) {
@@ -901,19 +1012,21 @@ class _TelaDeCadastroState extends State<FormularioCadastroPet> {
                       CadastroPet meuCadastro = CadastroPet(
                         id: 0,
                         nomeAnimal: nomeAnimal,
-                        tipo: tipoAnimal,
-                        raca: racaAnimal,
+                        tipo: _tipopetSelecionado!,
+                        raca: _racaSelecionada!,
                         idade: idadeAnimal,
                         chipado: _chipado,
                         vacinado: _vacinado,
                         castrado: _castrado,
                         descricao: descricaoAnimal,
-                        situacao:
-                            'DESAPARECIDO', //Desaparecido, //Encontrado, //Adotado
+                        situacao: _situacaoSelecioanda!,
+                        //Desaparecido, //Encontrado, //Adotado
                         datadodesaparecimento:
                             _utilsPet.formatarData(dataDesaparecimento, 'US'),
-                        bairro: bairroAnimal,
-                        cidadeEstado: cidadeEstado,
+                        endereco: enderecoPet,
+                        bairro: bairroPet,
+                        cidade: cidadePet,
+                        estado: _estadoSelecionado!,
                         nomeTutor: nomeTutor,
                         email: emailTutor,
                         celular: celularTutor.toString(),
