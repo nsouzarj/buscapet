@@ -89,6 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               TextFormField(
                 controller: _passwordController,
+                style: TextStyle(backgroundColor: Colors.black ,color: Colors.black),
                 decoration: InputDecoration(labelText: 'Senha'),
                 obscureText: true,
                 validator: (value) {
@@ -98,6 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   return null;
                 },
               ),
+
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _handleLogin,
