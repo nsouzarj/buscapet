@@ -67,7 +67,7 @@ class MensagemCentralizada extends StatelessWidget {
 class Global {
   /// URL base utilizada pela aplicação.
   //String urlGeral='https://laauci-ip-170-238-131-228.tunnelmole.net';
-  String urlGeral = "http://192.168.18.4:8084";
+  String urlGeral = 'https://wp1nc7-ip-170-238-131-228.tunnelmole.net';
 }
 
 /// Classe para validação de emails.

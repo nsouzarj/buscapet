@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:buscapet/classes/classecadastro.dart';
 import 'package:buscapet/classesutils/utilspet.dart';
 import 'package:buscapet/services/buscapetservice.dart';
@@ -149,7 +151,10 @@ class _TelaFiltroPetState extends State<TelaFiltroPet> {
                   items: _racasFiltradas.map((raca) {
                     return DropdownMenuItem(
                       value: raca,
-                      child: Text(raca,style: TextStyle(fontSize: 13),),
+                      child: Text(
+                        raca,
+                        style: TextStyle(fontSize: 13),
+                      ),
                     );
                   }).toList(),
                   decoration: InputDecoration(
@@ -224,14 +229,23 @@ class _TelaFiltroPetState extends State<TelaFiltroPet> {
 
                 SizedBox(height: 32),
                 // Botão para aplicar os filtros
-                ElevatedButton(
+                ElevatedButton.icon(
+                  icon: Icon(
+                    Icons.search_rounded,
+                    color: Colors.white,
+                  ),
+                  label: Text("Aplicar Filtros",
+                      style: TextStyle(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueAccent, // Cor de fundo cinza
+                  ),
                   onPressed: () {
                     // Obter os valores dos filtros
                     String? nomeAnimal = _nomeAnimalController.text;
                     String? enderecopet = _enderecoController.text;
                     String? bairroPet = _bairroController.text;
                     String? cidadePet = _cidadeController.text;
-                    String? estadoPet = _estadoSeleconado;
+                    String? estadoPet = _estadoController.text;
                     String? raca = _racaSelecionada;
                     String? tipo = _tipoSelecionado;
                     String? situacao = _situacaoSelecionada;
@@ -252,15 +266,24 @@ class _TelaFiltroPetState extends State<TelaFiltroPet> {
                       ),
                     );
                   },
-                  child: Text('Aplicar Filtros'),
                 ),
                 SizedBox(height: 16),
                 // Botão para limpar os filtros
-                ElevatedButton(
+                ElevatedButton.icon(
+                  icon: Icon(
+                    Icons.clear_all,
+                    color: Colors.white,
+                  ),
+                  label: Text(
+                    'Limpar Filtros',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange, // Cor de fundo cinza
+                  ),
                   onPressed: () {
                     _limparFiltros();
                   },
-                  child: Text('Limpar Filtros'),
                 ),
               ],
             ),
@@ -277,6 +300,7 @@ class _TelaFiltroPetState extends State<TelaFiltroPet> {
       _cidadeController.clear();
       _enderecoController.clear();
       _bairroController.clear();
+      _enderecoController.clear();
       _estadoSeleconado = null;
       _racaSelecionada = null;
       _tipoSelecionado = null;
@@ -345,11 +369,36 @@ class _ListaPetFiltradaState extends State<ListaPetFiltrada> {
                   pet.nomeAnimal
                       .toLowerCase()
                       .contains(widget.nomeAnimal.toLowerCase());
+              bool enderecoValido = widget.endereco!.isEmpty ||
+                  pet.endereco
+                      .toLowerCase()
+                      .contains(widget.endereco!.toLowerCase());
+              bool bairroValido = widget.bairro!.isEmpty ||
+                  pet.bairro
+                      .toLowerCase()
+                      .contains(widget.bairro!.toLowerCase());
+              bool cidadeValido = widget.cidade!.isEmpty ||
+                  pet.cidade
+                      .toLowerCase()
+                      .contains(widget.cidade!.toLowerCase());
+              bool estadoValido = widget.estado!.isEmpty ||
+                  pet.estado
+                      .toLowerCase()
+                      .contains(widget.estado!.toLowerCase());
+
               bool racaValida = widget.raca == null || pet.raca == widget.raca;
               bool tipoValido = widget.tipo == null || pet.tipo == widget.tipo;
               bool situacaoValida =
                   widget.situacao == null || pet.situacao == widget.situacao;
-              return nomeValido && racaValida && tipoValido && situacaoValida;
+
+              return nomeValido &&
+                  enderecoValido &&
+                  bairroValido &&
+                  cidadeValido &&
+                  estadoValido &&
+                  racaValida &&
+                  tipoValido &&
+                  situacaoValida;
             }).toList();
 
             if (petsFiltrados.isEmpty) {
@@ -362,6 +411,7 @@ class _ListaPetFiltradaState extends State<ListaPetFiltrada> {
               itemCount: petsFiltrados.length,
               itemBuilder: (context, index) {
                 final pet = petsFiltrados[index];
+
                 return ExpansionTile(
                   leading: GestureDetector(
                     onTap: () {
@@ -488,21 +538,26 @@ class _ListaPetFiltradaState extends State<ListaPetFiltrada> {
                             ],
                           ),
                           //Endereco
-                           Row(
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment
+                                .spaceBetween, // Adiciona espaçamento entre os elementos
                             children: [
                               Text('Endereço: ',
                                   style: TextStyle(color: Colors.black)),
                               Expanded(
-                                  child: Text(
-                                pet.endereco,
-                                style: TextStyle(color: Colors.black),
-                                overflow: TextOverflow.ellipsis,
-                              )),
+                                // Ocupa todo o espaço restante
+                                child: Text(
+                                  pet.endereco,
+                                  style: TextStyle(color: Colors.black),
+                                  maxLines: 2, // Permitir no máximo 2 linhas
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
                             ],
                           ),
 
                           //Bairro
-                           Row(
+                          Row(
                             children: [
                               Text('Bairro: ',
                                   style: TextStyle(color: Colors.black)),
@@ -515,9 +570,8 @@ class _ListaPetFiltradaState extends State<ListaPetFiltrada> {
                             ],
                           ),
 
-                         
                           //Cidade
-                           Row(
+                          Row(
                             children: [
                               Text('Cidade: ',
                                   style: TextStyle(color: Colors.black)),
@@ -530,7 +584,6 @@ class _ListaPetFiltradaState extends State<ListaPetFiltrada> {
                             ],
                           ),
 
-                         
                           //Estado
                           Row(
                             children: [
@@ -556,6 +609,7 @@ class _ListaPetFiltradaState extends State<ListaPetFiltrada> {
                               )),
                             ],
                           ),
+                        
                           SizedBox(height: 10),
                           ElevatedButton.icon(
                             icon: Icon(

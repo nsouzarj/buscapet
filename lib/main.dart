@@ -7,11 +7,11 @@ import 'package:flutter/material.dart';
 import 'fomulariocadastro.dart';
 import 'dart:ui';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-;
   runApp(MaterialApp(
     home: SplashScreen(),
     debugShowCheckedModeBanner: false,
@@ -20,9 +20,19 @@ void main() {
       '/splash': (context) => SplashScreen(),
       '/menu': (context) => MenuPrincipal(),
       '/login': (context) => LoginScreen(),
-      '/listaPets': (context) =>  TelaFiltroPet(),
-      '/cadastro': (context) =>  FormularioCadastroPet(),
+      '/listaPets': (context) => TelaFiltroPet(),
+      '/cadastro': (context) => FormularioCadastroPet(),
     },
+    // Adiciona o suporte para a localização em português do Brasil
+    locale: const Locale('pt', 'BR'),
+    localizationsDelegates: [
+      GlobalMaterialLocalizations.delegate,
+      GlobalWidgetsLocalizations.delegate,
+      GlobalCupertinoLocalizations.delegate,
+    ],
+    supportedLocales: [
+      const Locale('pt', 'BR'),
+    ],
   ));
 }
 
@@ -37,20 +47,25 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-     _checkLoginStatus();
+    _checkLoginStatus();
   }
 
-    Future<void> _checkLoginStatus() async {
+  Future<void> _checkLoginStatus() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
     Timer(
       const Duration(seconds: 3),
-      () => Navigator.pushReplacementNamed(context, isLoggedIn ? '/menu' : '/login'), // Navega para a tela correta
+      () => Navigator.pushReplacementNamed(
+          context, isLoggedIn ? '/menu' : '/login'), // Navega para a tela correta
     );
   }
 
   @override
   Widget build(BuildContext context) {
+
+
+
+    
     return Scaffold(
       backgroundColor: Colors.black,
       body: Center(
@@ -74,5 +89,6 @@ class _SplashScreenState extends State<SplashScreen> {
         ),
       ),
     );
+    
   }
 }

@@ -6,6 +6,11 @@ class Usuario {
   final String emailUser;
   final String celularUser;
   final String senhaUser;
+  final String? endereco; // Adiciona o campo endereco
+  final String? cep; // Adiciona o campo cep
+  final String? bairro; // Adiciona o campo bairro
+  final String? cidade; // Adiciona o campo cidade
+  final String? estado; // Adiciona o campo estado
 
   Usuario({
     this.id,
@@ -13,6 +18,11 @@ class Usuario {
     required this.emailUser,
     required this.celularUser,
     required this.senhaUser,
+    this.endereco,
+    this.cep,
+    this.bairro,
+    this.cidade,
+    this.estado,
   });
 
   // Converte o objeto Usuario para um mapa JSON
@@ -23,6 +33,11 @@ class Usuario {
       'emailUser': emailUser,
       'celularUser': celularUser,
       'senhaUser': senhaUser,
+      'endereco': endereco,
+      'cep': cep,
+      'bairro': bairro,
+      'cidade': cidade,
+      'estado': estado,
     };
   }
 
@@ -34,6 +49,11 @@ class Usuario {
       emailUser: json['emailUser'],
       celularUser: json['celularUser'],
       senhaUser: json['senhaUser'],
+      endereco: json['endereco'],
+      cep: json['cep'],
+      bairro: json['bairro'],
+      cidade: json['cidade'],
+      estado: json['estado'],
     );
   }
 

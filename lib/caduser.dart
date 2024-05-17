@@ -20,18 +20,36 @@ class _CadastroScreenState extends State<CadastroScreen> {
   final TextEditingController _senhaController = TextEditingController();
   final TextEditingController _nomeController = TextEditingController();
   final TextEditingController _telefoneController = TextEditingController();
+  final TextEditingController _endrecoController = TextEditingController();
+  final TextEditingController _cepController = TextEditingController();
+  final TextEditingController _bairroController = TextEditingController();
+  final TextEditingController _cidadeController = TextEditingController();
+  final TextEditingController _estadoController = TextEditingController();
 
   ValidaEmail _validaEmail = ValidaEmail();
 
   //Service pet
   ServicePet cadastroService = ServicePet();
 
+  ListaEstados _listaEstados = ListaEstados();
+  //Estado Selecionado
+  String? _estadoSelecionado;
+
   HashCode _hashCodePassword = HashCode();
 
-  String celularUser = "";
+
   String nomeUser = "";
   String emailUser = "";
+  String celularUser = "";
   String senhaUser = "";
+  String enderoUser = "";
+  String cepUser = "";
+  String bairroUser = "";
+  String cidadeUser = "";
+  String eatadoUser = "";
+  
+  
+
 
   @override
   void dispose() {
@@ -43,9 +61,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
   }
 
   /// Exibe um diálogo de confirmação de cadastro.
-  /// 
-  /// [context] Contexto do widget.
-  /// [usuario] Usuário a ser cadastrado.
+
   Future<void> _showMyDialog(BuildContext context, Usuario usuario) async {
     return showDialog<void>(
       context: context,
@@ -176,6 +192,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
 
   @override
   Widget build(BuildContext context) {
+    List<String> _listaestados = _listaEstados.listaEstados();
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -202,7 +219,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                   }
                   return null;
                 },
-                decoration: InputDecoration(labelText: 'Nome Completol'),
+                decoration: InputDecoration(labelText: 'Nome Completo'),
                 inputFormatters: [UpperCaseTextFormatter()],
                 keyboardType: TextInputType.text,
                 onChanged: (String? value) {
@@ -255,6 +272,114 @@ class _CadastroScreenState extends State<CadastroScreen> {
                   });
                 },
               ),
+              //Endereco
+              FormBuilderTextField(
+                controller: _endrecoController,
+                name: 'endereco',
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Este campo é obrigatório';
+                  }
+                  return null;
+                },
+                decoration: InputDecoration(labelText: 'Endereço'),
+                inputFormatters: [UpperCaseTextFormatter()],
+                keyboardType: TextInputType.text,
+                onChanged: (String? value) {
+                  setState(() {
+                    enderoUser = value!;
+                  });
+                },
+              ),
+               //Cep
+              FormBuilderTextField(
+                controller: _cepController,
+                name: 'cep',
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Este campo é obrigatório';
+                  }
+                  return null;
+                },
+                decoration: InputDecoration(labelText: 'Cep'),
+                inputFormatters:  [
+                  MaskedInputFormatter('#####-###'),
+                ],
+                keyboardType: TextInputType.text,
+                onChanged: (String? value) {
+                  setState(() {
+                    cepUser = value!;
+                  });
+                },
+              ),
+              //Bairro
+              FormBuilderTextField(
+                controller: _bairroController,
+                name: 'bairro',
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Este campo é obrigatório';
+                  }
+                  return null;
+                },
+                decoration: InputDecoration(labelText: 'Bairro'),
+                inputFormatters: [UpperCaseTextFormatter()],
+                keyboardType: TextInputType.text,
+                onChanged: (String? value) {
+                  setState(() {
+                    bairroUser = value!;
+                  });
+                },
+              ),
+              //Cidade
+              FormBuilderTextField(
+                controller: _cidadeController,
+                name: 'cidade',
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Este campo é obrigatório';
+                  }
+                  return null;
+                },
+                decoration: InputDecoration(labelText: 'Cidade'),
+                inputFormatters: [UpperCaseTextFormatter()],
+                keyboardType: TextInputType.text,
+                onChanged: (String? value) {
+                  setState(() {
+                    cidadeUser = value!;
+                  });
+                },
+              ),
+
+
+              //Estado
+              FormBuilderDropdown<String>(
+                name: 'estado', // Nome do campo no FormBuilder
+                decoration: InputDecoration(labelText: 'Estado'),
+                initialValue: _estadoSelecionado,
+
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Este campo é obrigatório';
+                  }
+                  return null;
+                },
+                items: _listaestados.map((estado) {
+                  return DropdownMenuItem(
+                    value: estado,
+                    child: Text(
+                      estado,
+                      style: TextStyle(fontSize: 13),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (String? novoValor) {
+                  setState(() {
+                    _estadoSelecionado = novoValor!;
+                  });
+                },
+              ),
+
               SizedBox(height: 16.0),
               FormBuilderTextField(
                 controller: _senhaController,
@@ -283,12 +408,16 @@ class _CadastroScreenState extends State<CadastroScreen> {
                       emailUser: emailUser,
                       celularUser: celularUser,
                       senhaUser: _hashCodePassword.hashPassword(senhaUser),
+                      endereco: enderoUser,
+                      bairro: bairroUser,
+                      cep: cepUser,
+                      cidade: cidadeUser,
+                      estado: _estadoSelecionado,
+
                     );
-                    //Aqui ira para a api do sistema
+                    //Aqui a caixa de dialogo para confirmacao
                     _showMyDialog(context, usuario);
-                    // print(usuario.toJsonString());
-                    // Navegar para outra tela após o cadastro
-                    // Navigator.pop(context);
+            
                   } else {
                     Navigator.pop(context);
                   }

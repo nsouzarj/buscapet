@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'fomulariocadastro.dart';
 import 'dart:ui';
 
+import 'graficos/graficos.dart';
+
 class MenuPrincipal extends StatefulWidget {
   @override
   State<MenuPrincipal> createState() => _MenuPrincipalState();
@@ -28,13 +30,17 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
         ),
       ),
       drawer: Drawer(
+        width: 350,
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
             DrawerHeader(
+
+              duration: Duration(seconds: 20),
               decoration: BoxDecoration(
-                color: Colors.blue,
+                color: Colors.black, shape: BoxShape.rectangle      
               ),
+          
               child: Text(
                 'Menu',
                 style: TextStyle(
@@ -59,6 +65,15 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => TelaFiltroPet()),
+                );
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.auto_graph),
+              title: Text('Grafico Atual'),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => PizzaChartExample()),
                 );
               },
             ),
@@ -90,7 +105,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                   label: Text(
                     'Cadastrar Pet',
                     style: TextStyle(
-                      fontSize: 25,
+                      fontSize: 20,
                       color: Colors.white,
                     ),
                   ),
@@ -110,7 +125,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                   label: Text(
                     'Buscar Pet',
                     style: TextStyle(
-                      fontSize: 25,
+                      fontSize: 20,
                       color: Colors.white,
                     ),
                   ),
@@ -128,7 +143,7 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
                   'Versão 1.0 - 2024',
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey[600],
+                    color: Colors.white
                   ),
                 ),
                 SizedBox(height: 20), // Add bottom padding to avoid overflow

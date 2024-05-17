@@ -418,7 +418,7 @@ class _TelaDeCadastroState extends State<FormularioCadastroPet> {
     final List<String> _listaSituacao = [
       'ABANDONADO',
       'DESAPARECIDO',
-      'ADOÇÂO'
+      'ADOCAO'
     ]; //ENCONTRADO //ADOTADO
     final List<String> _listaracaes = _listaRacaCaes.ListaRaca();
     final List<String> _listaracgatos = _listaRacaGatos.racadeGatosConhecidas();
@@ -524,7 +524,7 @@ class _TelaDeCadastroState extends State<FormularioCadastroPet> {
                         .map((raca) {
                       return DropdownMenuItem(
                         value: raca,
-                        child: Text(raca),
+                        child: Text(raca,style: TextStyle(fontSize: 13),),
                       );
                     }).toList(),
                     onChanged: (String? novoValor) {
@@ -761,7 +761,7 @@ class _TelaDeCadastroState extends State<FormularioCadastroPet> {
                       keyboardType: TextInputType.text,
                       onChanged: (String? value) {
                         setState(() {
-                          estadoPet = value!;
+                          bairroPet = value!;
                         });
                       }),
 
@@ -796,7 +796,7 @@ class _TelaDeCadastroState extends State<FormularioCadastroPet> {
                     items: _listaestados.map((estado) {
                       return DropdownMenuItem(
                         value: estado,
-                        child: Text(estado),
+                        child: Text(estado,style: TextStyle(fontSize: 13),),
                       );
                     }).toList(),
                     onChanged: (String? novoValor) {
@@ -870,9 +870,9 @@ class _TelaDeCadastroState extends State<FormularioCadastroPet> {
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text(
-                          'Fotos do Pet',
+                          'Fotos - limite de até 4 fotos.',
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -1033,7 +1033,7 @@ class _TelaDeCadastroState extends State<FormularioCadastroPet> {
                         imagens: imagensPet,
                       );
 
-                      if (_formKey.currentState!.validate()) {
+                      if (_formKey.currentState!.validate() && imagensPet.length > 0 ) {
                         _showMyDialog(context, meuCadastro);
                       }
                     },
