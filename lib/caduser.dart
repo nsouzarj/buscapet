@@ -37,7 +37,6 @@ class _CadastroScreenState extends State<CadastroScreen> {
 
   HashCode _hashCodePassword = HashCode();
 
-
   String nomeUser = "";
   String emailUser = "";
   String celularUser = "";
@@ -47,9 +46,6 @@ class _CadastroScreenState extends State<CadastroScreen> {
   String bairroUser = "";
   String cidadeUser = "";
   String eatadoUser = "";
-  
-  
-
 
   @override
   void dispose() {
@@ -291,7 +287,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                   });
                 },
               ),
-               //Cep
+              //Cep
               FormBuilderTextField(
                 controller: _cepController,
                 name: 'cep',
@@ -302,7 +298,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                   return null;
                 },
                 decoration: InputDecoration(labelText: 'Cep'),
-                inputFormatters:  [
+                inputFormatters: [
                   MaskedInputFormatter('#####-###'),
                 ],
                 keyboardType: TextInputType.text,
@@ -351,7 +347,6 @@ class _CadastroScreenState extends State<CadastroScreen> {
                 },
               ),
 
-
               //Estado
               FormBuilderDropdown<String>(
                 name: 'estado', // Nome do campo no FormBuilder
@@ -386,7 +381,13 @@ class _CadastroScreenState extends State<CadastroScreen> {
                 name: 'senhaUser',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Este campo é obrigatório';
+                    return 'Por favor, insira sua senha';
+                  }
+                  if (value.length < 8) {
+                    return 'A senha deve ter no mínimo 8 caracteres';
+                  }
+                  if (!RegExp(r'[0-9]').hasMatch(value)) {
+                    return 'A senha deve conter pelo menos um número';
                   }
                   return null;
                 },
@@ -413,11 +414,9 @@ class _CadastroScreenState extends State<CadastroScreen> {
                       cep: cepUser,
                       cidade: cidadeUser,
                       estado: _estadoSelecionado,
-
                     );
                     //Aqui a caixa de dialogo para confirmacao
                     _showMyDialog(context, usuario);
-            
                   } else {
                     Navigator.pop(context);
                   }

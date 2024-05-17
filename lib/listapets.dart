@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:buscapet/classes/classecadastro.dart';
 import 'package:buscapet/classesutils/utilspet.dart';
 import 'package:buscapet/services/buscapetservice.dart';
+import 'package:buscapet/services/map/mapgoogle.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/services.dart';
@@ -35,6 +36,7 @@ class _TelaFiltroPetState extends State<TelaFiltroPet> {
   String? _tipoSelecionado;
   String? _situacaoSelecionada;
   String? _estadoSeleconado;
+  String estadoreal = "";
   String? _racagatoSelecionada;
   final List<String> _listaracascaes = [];
   final List<String> _listaracagatos = [];
@@ -211,6 +213,7 @@ class _TelaFiltroPetState extends State<TelaFiltroPet> {
                   onChanged: (value) {
                     setState(() {
                       _estadoSeleconado = value;
+                      estadoreal = _estadoSeleconado!;
                     });
                   },
                   items: _listaestados.map((estado) {
@@ -245,7 +248,7 @@ class _TelaFiltroPetState extends State<TelaFiltroPet> {
                     String? enderecopet = _enderecoController.text;
                     String? bairroPet = _bairroController.text;
                     String? cidadePet = _cidadeController.text;
-                    String? estadoPet = _estadoController.text;
+                    String estadoPet = estadoreal;
                     String? raca = _racaSelecionada;
                     String? tipo = _tipoSelecionado;
                     String? situacao = _situacaoSelecionada;
@@ -304,6 +307,7 @@ class _TelaFiltroPetState extends State<TelaFiltroPet> {
       _estadoSeleconado = null;
       _racaSelecionada = null;
       _tipoSelecionado = null;
+      estadoreal = "";
       _situacaoSelecionada = null;
       _racaController.clear(); // Limpa o campo de pesquisa
       _racasFiltradas = _tipoSelecionado == 'CANINO'
@@ -609,42 +613,72 @@ class _ListaPetFiltradaState extends State<ListaPetFiltrada> {
                               )),
                             ],
                           ),
-                        
+
                           SizedBox(height: 10),
-                          ElevatedButton.icon(
-                            icon: Icon(
-                              Icons.camera,
-                              color: Colors.blue,
-                              size: 30,
-                            ),
-                            onPressed: () {
-                              List<String> caminho = [];
-                              if (pet.imagens.length >= 2) {
-                                for (var petlista in pet.imagens) {
-                                  petlista.nomeArquivo.toString();
-                                  caminho.add(
-                                      "${_global.urlGeral}/pet/imagem/${petlista.nomeArquivo}");
-                                }
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => TelaDetalhe(
-                                      imageUrls: caminho,
-                                    ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  icon: Icon(
+                                    Icons.camera,
+                                    color: Colors.blue,
+                                    size: 30,
                                   ),
-                                );
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content:
-                                        Text('A foto unica e do avatar acima.'),
-                                    backgroundColor:
-                                        Colors.blue, // Cor de fundo para erro
+                                  onPressed: () {
+                                    List<String> caminho = [];
+                                    if (pet.imagens.length >= 2) {
+                                      for (var petlista in pet.imagens) {
+                                        petlista.nomeArquivo.toString();
+                                        caminho.add(
+                                            "${_global.urlGeral}/pet/imagem/${petlista.nomeArquivo}");
+                                      }
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => TelaDetalhe(
+                                            imageUrls: caminho,
+                                          ),
+                                        ),
+                                      );
+                                    } else {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                              'A foto única é do avatar acima.'),
+                                          backgroundColor: Colors.blue,
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  label: Text('(+) Fotos.'),
+                                ),
+                              ),
+                              SizedBox(width: 16), // Espaço entre os botões
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  icon: Icon(
+                                    Icons.maps_home_work,
+                                    color: Colors.blue,
+                                    size: 30,
                                   ),
-                                );
-                              }
-                            },
-                            label: Text('Ver mais fotos.'),
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => MapaScreen(
+                                          endereco: pet.endereco,
+                                          bairro: pet.bairro,
+                                          cidade: pet.cidade,
+                                          estado: pet.estado,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  label: Text('Mapa.'),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -654,6 +688,7 @@ class _ListaPetFiltradaState extends State<ListaPetFiltrada> {
               },
             );
           } else if (snapshot.hasError) {
+                          
             WidgetsBinding.instance.addPostFrameCallback((_) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(

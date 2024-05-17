@@ -4,13 +4,17 @@ import 'package:buscapet/listapets.dart';
 import 'package:buscapet/loginscreen.dart';
 import 'package:buscapet/menuprincipal.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'fomulariocadastro.dart';
 import 'dart:ui';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter/foundation.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+   
+
 
   runApp(MaterialApp(
     home: SplashScreen(),

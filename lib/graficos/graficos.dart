@@ -36,31 +36,33 @@ class _PizzaChartExampleState extends State<PizzaChartExample> {
         backgroundColor: Colors.black,
         iconTheme: IconThemeData(color: Colors.white),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              height: 300,
-              child: SfCircularChart(
-                title: const ChartTitle(text: 'Cães do Aplicativo',textStyle: TextStyle(fontSize: 20,color: Colors.blue),),
-                series: <CircularSeries>[
-                  PieSeries<_ChartData, String>(
-                    dataSource: chartData,
-                    xValueMapper: (_ChartData data, _) => data.category,
-                    yValueMapper: (_ChartData data, _) => data.value,
-                    pointColorMapper: (_ChartData data, _) => data.color,
-                    enableTooltip: true,
-                  ),
-                ],
+      body: SingleChildScrollView( // Adiciona SingleChildScrollView
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                height: 300,
+                child: SfCircularChart(
+                  title: const ChartTitle(text: 'Cães do Aplicativo',textStyle: TextStyle(fontSize: 20,color: Colors.blue),),
+                  series: <CircularSeries>[
+                    PieSeries<_ChartData, String>(
+                      dataSource: chartData,
+                      xValueMapper: (_ChartData data, _) => data.category,
+                      yValueMapper: (_ChartData data, _) => data.value,
+                      pointColorMapper: (_ChartData data, _) => data.color,
+                      enableTooltip: true,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 20.0), // Espaço entre a legenda e a borda
-              child: PizzaChartLegend(chartData: chartData),
-            ),
-          ],
+              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20.0), // Espaço entre a legenda e a borda
+                child: PizzaChartLegend(chartData: chartData),
+              ),
+            ],
+          ),
         ),
       ),
     );
