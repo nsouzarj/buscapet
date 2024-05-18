@@ -29,8 +29,8 @@ class ServicePet {
       print('Cadastro enviado com sucesso!');
     } else if (response.statusCode == 201) {
       print('Cadastro criado com sucesso!');
-    } else {
-      throw Exception('Falha ao enviar cadastro: ${response.statusCode}');
+    } else if(response.statusCode==409) {
+      throw Exception('Falha ao enviar cadastro ou usuario já existente: ${response.statusCode}');
     }
   }
 

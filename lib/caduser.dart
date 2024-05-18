@@ -96,12 +96,12 @@ class _CadastroScreenState extends State<CadastroScreen> {
               TextButton(
                 child: const Text('Confirmar'),
                 onPressed: () async {
-                  
                   try {
                     setState(() {
                       isLoading = true;
                     }); // Start loading
                     await usuarioServive.cadUserApi(usuario);
+
                     await showModalBottomSheet(
                       context: context,
                       shape: RoundedRectangleBorder(
@@ -147,28 +147,10 @@ class _CadastroScreenState extends State<CadastroScreen> {
                             BorderRadius.vertical(top: Radius.circular(8)),
                       ),
                       builder: (BuildContext context) {
-                        return Container(
-                          height: 200,
-                          padding: EdgeInsets.all(20),
-                          child: Column(
-                            children: [
-                              Text(
-                                "Aviso",
-                                style: TextStyle(fontSize: 16),
-                              ),
-                              SizedBox(height: 10),
-                              Text(
-                                "Erro ao cadastrar. ",
-                                style: TextStyle(color: Colors.red),
-                              ),
-                              SizedBox(height: 20),
-                              ElevatedButton(
-                                child: Text("Fechar"),
-                                onPressed: () => Navigator.of(context).pop(),
-                              ),
-                            ],
-                          ),
-                        );
+                        return MyErrorDialog(
+                            message:
+                                "Erro ao cadastrar ou usuário já existente. ");
+                    
                       },
                       // ... Error bottom sheet ...
                     );
@@ -390,7 +372,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                   if (!RegExp(r'[0-9]').hasMatch(value)) {
                     return 'A senha deve conter pelo menos um número';
                   }
-                
+
                   return null;
                 },
                 decoration: InputDecoration(labelText: 'Senha'),

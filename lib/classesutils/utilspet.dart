@@ -376,3 +376,34 @@ class ListaRacaGatos {
     return racadeGatos;
   }
 }
+
+
+
+class MyErrorDialog extends StatelessWidget {
+  final String message;
+
+  const MyErrorDialog({Key? key, required this.message}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text("Aviso"),
+      content: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start, // Alinha o texto à esquerda
+          children: [
+            Text(
+              message,
+              style: TextStyle(color: Colors.red),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("Fechar"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
