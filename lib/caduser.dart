@@ -2,6 +2,7 @@ import 'package:buscapet/classes/classeuser.dart';
 import 'package:buscapet/classesutils/utilspet.dart';
 import 'package:buscapet/loginscreen.dart';
 import 'package:buscapet/services/cadastroservice.dart';
+import 'package:buscapet/services/usuarioservice.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
@@ -29,8 +30,8 @@ class _CadastroScreenState extends State<CadastroScreen> {
   ValidaEmail _validaEmail = ValidaEmail();
 
   //Service pet
-  ServicePet cadastroService = ServicePet();
-
+  //ServicePet cadastroService = ServicePet();
+  UsuaroService usuarioServive = UsuaroService();
   ListaEstados _listaEstados = ListaEstados();
   //Estado Selecionado
   String? _estadoSelecionado;
@@ -95,12 +96,12 @@ class _CadastroScreenState extends State<CadastroScreen> {
               TextButton(
                 child: const Text('Confirmar'),
                 onPressed: () async {
-                  print(usuario.toJson());
+                  
                   try {
                     setState(() {
                       isLoading = true;
                     }); // Start loading
-                    await cadastroService.cadUserApi(usuario);
+                    await usuarioServive.cadUserApi(usuario);
                     await showModalBottomSheet(
                       context: context,
                       shape: RoundedRectangleBorder(
@@ -389,6 +390,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                   if (!RegExp(r'[0-9]').hasMatch(value)) {
                     return 'A senha deve conter pelo menos um número';
                   }
+                
                   return null;
                 },
                 decoration: InputDecoration(labelText: 'Senha'),

@@ -1,12 +1,14 @@
 import 'package:buscapet/caduser.dart';
 import 'package:buscapet/classesutils/utilspet.dart';
+import 'package:buscapet/recuperasenha.dart';
 import 'package:buscapet/services/cadastroservice.dart';
 import 'package:buscapet/menuprincipal.dart';
+import 'package:buscapet/services/usuarioservice.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Tela de login para o aplicativo Buscapet.
-/// 
+///
 /// Esta tela permite que os usuários façam login com seu email e senha.
 /// Também fornece opções para cadastrar uma nova conta ou recuperar uma senha esquecida.
 class LoginScreen extends StatefulWidget {
@@ -18,10 +20,13 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  ServicePet serv = ServicePet();
+  ValidaEmail _validaEmail = ValidaEmail();
+
+
+  UsuaroService serv = UsuaroService();
 
   /// Lida com a tentativa de login do usuário.
-  /// 
+  ///
   /// Valida os dados do formulário, autentica o usuário usando [ServicePet.verifyUserCad]
   /// e navega para a tela do menu se a autenticação for bem-sucedida.
   /// Exibe uma caixa de diálogo de erro se a autenticação falhar.
@@ -84,12 +89,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   if (value == null || value.isEmpty) {
                     return 'Por favor, insira seu email';
                   }
+                  if (!_validaEmail.validarEmail(value)) {
+                    return 'E-Mail inválido';
+                  }
+
                   return null;
                 },
               ),
               TextFormField(
                 controller: _passwordController,
-                style: TextStyle(backgroundColor: Colors.black ,color: Colors.black),
+                style: TextStyle(
+                    backgroundColor: Colors.black, color: Colors.black),
                 decoration: InputDecoration(labelText: 'Senha'),
                 obscureText: true,
                 validator: (value) {
@@ -99,7 +109,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   return null;
                 },
               ),
-
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _handleLogin,
@@ -122,7 +131,13 @@ class _LoginScreenState extends State<LoginScreen> {
               ElevatedButton(
                 onPressed: () {
                   // Navegar para a tela de cadastro de usuário
-                  print("Recuperar senha pressionado");
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ForgotPasswordScreen(),
+                    ),
+                  );
                 },
                 child: Text("Esqueceu a senha?"),
               ),
@@ -135,7 +150,7 @@ class _LoginScreenState extends State<LoginScreen> {
 }
 
 /// Verifica o estado de login do usuário.
-/// 
+///
 /// Retorna `true` se o usuário estiver logado, caso contrário, retorna `false`.
 Future<bool> checkLoginStatus() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();

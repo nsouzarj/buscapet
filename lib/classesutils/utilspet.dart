@@ -67,7 +67,7 @@ class MensagemCentralizada extends StatelessWidget {
 class Global {
   /// URL base utilizada pela aplicação.
   //String urlGeral='https://laauci-ip-170-238-131-228.tunnelmole.net';
-  String urlGeral = 'https://uh2mqs-ip-170-238-131-228.tunnelmole.net';
+  String urlGeral = 'https://bhhody-ip-170-238-131-228.tunnelmole.net';
 }
 
 /// Classe para validação de emails.
@@ -96,6 +96,13 @@ class HashCode {
     return digest.toString();
   }
 }
+
+class Teste{
+   tteste(){
+
+  }
+}
+
 
 class ListaRacaCaes {
   // Lista de opções para os filtros

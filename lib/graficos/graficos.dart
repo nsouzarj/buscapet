@@ -42,7 +42,7 @@ class _PizzaChartExampleState extends State<PizzaChartExample> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                height: 300,
+                height: 500,
                 child: SfCircularChart(
                   title: const ChartTitle(text: 'Cães do Aplicativo',textStyle: TextStyle(fontSize: 20,color: Colors.blue),),
                   series: <CircularSeries>[
@@ -52,6 +52,7 @@ class _PizzaChartExampleState extends State<PizzaChartExample> {
                       yValueMapper: (_ChartData data, _) => data.value,
                       pointColorMapper: (_ChartData data, _) => data.color,
                       enableTooltip: true,
+                      
                     ),
                   ],
                 ),
@@ -92,8 +93,8 @@ class PizzaChartLegend extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                width: 12.0,
-                height: 12.0,
+                width: 20.0,
+                height: 20.0,
                 decoration: BoxDecoration(
                   color: data.color,
                   shape: BoxShape.circle,

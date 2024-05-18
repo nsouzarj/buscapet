@@ -2,6 +2,9 @@
 
 Projeto em fluuter 
 
+- Seviço de google maps
+
+- Servilo de email  
 ## Objetivo
 
 Este projeto tem como objetivo busca pets perdidos abandonados ou encontrados.
