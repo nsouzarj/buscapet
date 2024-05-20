@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:buscapet/listapets.dart';
+import 'package:buscapet/services/map/mapgooglegeral.dart';
 import 'package:flutter/material.dart';
 import 'fomulariocadastro.dart';
 import 'dart:ui';
@@ -74,6 +75,15 @@ class _MenuPrincipalState extends State<MenuPrincipal> {
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => PizzaChartExample()),
+                );
+              },
+            ),
+             ListTile(
+              leading: Icon(Icons.maps_home_work_rounded),
+              title: Text('Mapa Geral'),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => MapaScreenGeral()),
                 );
               },
             ),
