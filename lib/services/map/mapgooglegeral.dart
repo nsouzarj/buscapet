@@ -86,22 +86,33 @@ class _MapaScreenGeralState extends State<MapaScreenGeral> {
 
     // When we reach here, the user has granted permission
     // Now, fetch the position
-    Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
 
-    // Update the current position
-    setState(() {
-      _currentPosition = LatLng(position.latitude, position.longitude);
-      // Move the map to the current position after getting GPS data
-      if (_mapControllerInitialized && _currentPosition != null) {
-        _mapController.animateCamera(CameraUpdate.newCameraPosition(
-          CameraPosition(
-            target: _currentPosition!,
-            zoom: 14.0, // Adjust zoom level as needed
-          ),
-        ));
+      // Update the current position
+      setState(() {
+        _currentPosition = LatLng(position.latitude, position.longitude);
+        // Move the map to the current position after getting GPS data
+        if (_mapControllerInitialized && _currentPosition != null) {
+          _mapController.animateCamera(CameraUpdate.newCameraPosition(
+            CameraPosition(
+              target: _currentPosition!,
+              zoom: 14.0, // Adjust zoom level as needed
+            ),
+          ));
+        }
+      });
+    } catch (e) {
+      // Handle errors while getting the current position
+      // For example, if location services are disabled or there are network issues
+      print('Erro ao obter localização: $e');
+      // Move the map to the first address in the list
+      if (_mapControllerInitialized && enderecos.isNotEmpty) {
+        _moveToFirstAddress();
       }
-    });
+    }
   }
 
   _fetchEnderecos() async {
@@ -174,6 +185,32 @@ class _MapaScreenGeralState extends State<MapaScreenGeral> {
     setState(() {});
   }
 
+  void _moveToFirstAddress() async {
+    if (enderecos.isNotEmpty) {
+      String address = '${enderecos.first.endereco}, ${enderecos.first.bairro}, ${enderecos.first.cidade}, ${enderecos.first.estado}';
+      try {
+        List<Location> locations = await locationFromAddress(address);
+        if (locations.isNotEmpty) {
+          LatLng location =
+              LatLng(locations.first.latitude, locations.first.longitude);
+          _mapController.animateCamera(CameraUpdate.newCameraPosition(
+            CameraPosition(
+              target: location,
+              zoom: 14.0, // Adjust zoom level as needed
+            ),
+          ));
+        } else {
+          // Handle the case where the address conversion fails
+          print('Endereço não encontrado: $address');
+          // You can add error handling here (e.g., display an error message)
+        }
+      } catch (e) {
+        print('Erro ao obter localização: $e');
+        // Handle the error (e.g., display an error message)
+      }
+    }
+  }
+
   // Function to open the email app with the specified email address
   void _openEmailApp(String email) async {
     // Create the email URL
@@ -225,6 +262,9 @@ class _MapaScreenGeralState extends State<MapaScreenGeral> {
                     zoom: 14.0, // Adjust zoom level as needed
                   ),
                 ));
+              } else if (enderecos.isNotEmpty) {
+                // If _currentPosition is null, move the map to the first address
+                _moveToFirstAddress();
               }
             },
             markers: _markers,
