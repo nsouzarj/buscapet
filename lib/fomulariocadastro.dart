@@ -1,4 +1,3 @@
-// Crie uma nova classe para o formulário de cadastro de pets
 import 'dart:io';
 import 'package:buscapet/classes/imagempet.dart';
 import 'package:buscapet/services/cadastroservice.dart';
@@ -52,6 +51,7 @@ class _TelaDeCadastroState extends State<FormularioCadastroPet> {
   TextEditingController _controller = TextEditingController();
   // Crie um FocusNode
   FocusNode _focusNodeData = FocusNode();
+  FocusNode _nomeTutorFocusNode = FocusNode(); // Criando FocusNode para "Nome do Tutor"
   List<Asset> images = <Asset>[];
 
   //Service de cadsatro
@@ -759,6 +759,7 @@ class _TelaDeCadastroState extends State<FormularioCadastroPet> {
                       decoration: InputDecoration(labelText: 'Bairro'),
                       inputFormatters: [UpperCaseTextFormatter()],
                       keyboardType: TextInputType.text,
+                   
                       onChanged: (String? value) {
                         setState(() {
                           bairroPet = value!;
@@ -803,6 +804,7 @@ class _TelaDeCadastroState extends State<FormularioCadastroPet> {
                       setState(() {
                         _estadoSelecionado = novoValor!;
                       });
+                      FocusScope.of(context).requestFocus(_nomeTutorFocusNode); // Solicita foco
                     },
                   ),
 
@@ -818,6 +820,7 @@ class _TelaDeCadastroState extends State<FormularioCadastroPet> {
                           InputDecoration(labelText: 'Nome do Responsável'),
                       inputFormatters: [UpperCaseTextFormatter()],
                       keyboardType: TextInputType.text,
+                      focusNode: _nomeTutorFocusNode, // Atribuindo o FocusNode
                       onChanged: (String? value) {
                         setState(() {
                           nomeTutor = value!;
