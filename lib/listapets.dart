@@ -51,6 +51,7 @@ class _TelaFiltroPetState extends State<TelaFiltroPet> {
     _racasFiltradas = _listaRaca.ListaRaca();
   }
 
+
   @override
   Widget build(BuildContext context) {
     // Lista de opções para os filtros
