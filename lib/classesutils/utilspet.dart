@@ -67,7 +67,7 @@ class MensagemCentralizada extends StatelessWidget {
 class Global {
   /// URL base utilizada pela aplicação.
   ///String urlGeral='https://10kegd-ip-170-238-131-228.tunnelmole.net';
-String urlGeral = 'http://ec2-34-203-33-180.compute-1.amazonaws.com:8084';
+String urlGeral = 'http://192.168.18.5:8084';
 }
 
 /// Classe para validação de emails.
