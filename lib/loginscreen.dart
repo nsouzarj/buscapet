@@ -6,11 +6,8 @@ import 'package:buscapet/menuprincipal.dart';
 import 'package:buscapet/services/usuarioservice.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:local_auth/local_auth.dart'; // Importe o pacote de autenticação biométrica
 
-/// Tela de login para o aplicativo Buscapet.
-///
-/// Esta tela permite que os usuários façam login com seu email e senha.
-/// Também fornece opções para cadastrar uma nova conta ou recuperar uma senha esquecida.
 class LoginScreen extends StatefulWidget {
   @override
   _LoginScreenState createState() => _LoginScreenState();
@@ -22,14 +19,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   ValidaEmail _validaEmail = ValidaEmail();
 
-
   UsuaroService serv = UsuaroService();
+  final LocalAuthentication _localAuth = LocalAuthentication(); // Instância para autenticação biométrica
 
   /// Lida com a tentativa de login do usuário.
-  ///
-  /// Valida os dados do formulário, autentica o usuário usando [ServicePet.verifyUserCad]
-  /// e navega para a tela do menu se a autenticação for bem-sucedida.
-  /// Exibe uma caixa de diálogo de erro se a autenticação falhar.
   Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
       String email = _emailController.text;
@@ -37,11 +30,89 @@ class _LoginScreenState extends State<LoginScreen> {
       bool isAuthenticated = await serv.verifyUserCad(email, password);
       if (isAuthenticated) {
         SharedPreferences prefs = await SharedPreferences.getInstance();
+
+        // Verificar se o dispositivo suporta biometria
+        bool isBiometricAvailable = await _isBiometricAvailable();
+        if (isBiometricAvailable) {
+          bool useBiometrics = await showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text("Ativar Biometria"),
+                content: Text("Deseja ativar o login com biometria?"),
+                actions: <Widget>[
+                  TextButton(
+                    child: Text("Não"),
+                    onPressed: () {
+                      Navigator.of(context).pop(false);
+                    },
+                  ),
+                  TextButton(
+                    child: Text("Sim"),
+                    onPressed: () {
+                      Navigator.of(context).pop(true);
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+
+          if (useBiometrics) {
+            bool authenticatedWithBiometrics = await _authenticateWithBiometrics();
+            if (authenticatedWithBiometrics) {
+              // Define isLoggedIn como true somente se a biometria for bem-sucedida
+              await prefs.setBool('isLoggedIn', true);
+              await prefs.setBool('biometricEnabled', true);
+              Navigator.pushReplacementNamed(context, '/menu');
+              return; // Sai da função após sucesso
+            } else {
+              // Limpa o estado de login se a biometria falhar ou for cancelada
+              await prefs.setBool('isLoggedIn', false);
+              _showErrorDialog("Erro", "Autenticação biométrica cancelada ou falhou.");
+              return; // Sai da função após falha
+            }
+          }
+        }
+
+        // Se a biometria não estiver disponível ou o usuário optar por não usá-la
         await prefs.setBool('isLoggedIn', true);
         Navigator.pushReplacementNamed(context, '/menu');
       } else {
         _showErrorDialog("Erro de autenticação", "Email ou senha inválidos.");
       }
+    }
+  }
+
+  /// Verifica se o dispositivo suporta biometria.
+  Future<bool> _isBiometricAvailable() async {
+    try {
+      bool canCheckBiometrics = await _localAuth.canCheckBiometrics;
+      List<BiometricType> availableBiometrics = await _localAuth.getAvailableBiometrics();
+
+      if (canCheckBiometrics && availableBiometrics.isNotEmpty) {
+        return true;
+      }
+    } catch (e) {
+      print("Erro ao verificar disponibilidade de biometria: $e");
+    }
+    return false;
+  }
+
+  /// Autentica o usuário com biometria.
+  Future<bool> _authenticateWithBiometrics() async {
+    try {
+      bool authenticated = await _localAuth.authenticate(
+        localizedReason: "Autentique-se para acessar o aplicativo",
+        options: const AuthenticationOptions(
+          stickyAuth: true,
+          biometricOnly: true,
+        ),
+      );
+      return authenticated;
+    } catch (e) {
+      print("Erro durante a autenticação biométrica: $e");
+      return false; // Retorna `false` em caso de erro ou cancelamento
     }
   }
 
@@ -92,7 +163,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   if (!_validaEmail.validarEmail(value)) {
                     return 'E-Mail inválido';
                   }
-
                   return null;
                 },
               ),
@@ -116,6 +186,30 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               SizedBox(height: 10),
               ElevatedButton(
+                onPressed: () async {
+                  // Verificar se o dispositivo suporta biometria
+                  bool isBiometricAvailable = await _isBiometricAvailable();
+                  if (isBiometricAvailable) {
+                    bool authenticatedWithBiometrics = await _authenticateWithBiometrics();
+                    if (authenticatedWithBiometrics) {
+                      SharedPreferences prefs = await SharedPreferences.getInstance();
+                      bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+                      if (isLoggedIn) {
+                        Navigator.pushReplacementNamed(context, '/menu');
+                      } else {
+                        _showErrorDialog("Erro", "Usuário não cadastrado com biometria.");
+                      }
+                    } else {
+                      _showErrorDialog("Erro", "Autenticação biométrica cancelada ou falhou.");
+                    }
+                  } else {
+                    _showErrorDialog("Erro", "Biometria não disponível neste dispositivo.");
+                  }
+                },
+                child: Text("Login com Biometria"),
+              ),
+              SizedBox(height: 10),
+              ElevatedButton(
                 onPressed: () {
                   // Navegar para a tela de cadastro de usuário
                   Navigator.push(
@@ -130,8 +224,7 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(height: 10),
               ElevatedButton(
                 onPressed: () {
-                  // Navegar para a tela de cadastro de usuário
-
+                  // Navegar para a tela de recuperação de senha
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -147,12 +240,4 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-}
-
-/// Verifica o estado de login do usuário.
-///
-/// Retorna `true` se o usuário estiver logado, caso contrário, retorna `false`.
-Future<bool> checkLoginStatus() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  return prefs.getBool('isLoggedIn') ?? false;
 }
